@@ -1,0 +1,1 @@
+/usr/lib/ccache/c++ CMakeFiles/inx_bot.dir/main.cpp.o -o inx_bot  -lTgBot /usr/lib/x86_64-linux-gnu/libssl.so /usr/lib/x86_64-linux-gnu/libcrypto.so /usr/lib/x86_64-linux-gnu/libboost_system.so.1.83.0 
