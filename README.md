@@ -1,5 +1,14 @@
 # InXBot
 
+
+##Пример файла   include/config.hpp
+```Shell
+#include <string>
+
+std::string TG_BOT_TOKEN ="6653096426:AAFS69aAx7gG8JPew5HtjSIPdqUSsQB6bi4";
+std::string DB_NAME = "";
+```
+
 ```Shell
 sudo apt update
 ```
