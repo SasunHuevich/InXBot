@@ -1,7 +1,7 @@
 # InXBot
 
 
-##Пример файла   include/config.hpp
+## Пример файла   include/config.hpp
 ```Shell
 #include <string>
 
