@@ -27,11 +27,22 @@ sudo apt-get install libssl-dev
 ```Shell
 sudo apt-get install libboost-all-dev
 ```
-
+Установка tg-bot-cpp
 ```Shell
 git clone https://github.com/reo7sp/tgbot-cpp.git
 cd tgbot-cpp
 cmake .
+make -j4
+sudo make install
+```
+
+Установка SQLiteCpp
+
+```Shell
+git clone https://github.com/SRombauts/SQLiteCpp.git
+cd SQLiteCpp
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j4
 sudo make install
 ```
