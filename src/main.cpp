@@ -13,6 +13,7 @@ int main() {
     TgBot::Bot bot(TG_BOT_TOKEN);
     bot.getEvents().onCommand("start", [&bot](TgBot::Message::Ptr message) {
         bot.getApi().sendMessage(message->chat->id, "Привет!");
+        
     });
 
     bot.getEvents().onAnyMessage([&bot](TgBot::Message::Ptr message) {
