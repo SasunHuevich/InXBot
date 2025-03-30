@@ -32,7 +32,7 @@ public:
     
 
 
-    void insertUser(int user_id, const std::string& name, std::optional<int> referrer_id = std::nullopt) {
+    void insertUser(int64_t user_id, const std::string& name, std::optional<int64_t> referrer_id = std::nullopt) {
         try{
             std::string queryStr = "INSERT INTO users (user_id, name, referrer_id) VALUES (?, ?, ?)";
             SQLite::Statement query(db, queryStr);
@@ -58,7 +58,7 @@ public:
     }
 
 
-    std::string getUsernameById(int user_id){
+    std::string getUsernameById(int64_t user_id){
         std::string username;
         SQLite::Statement query(db, "SELECT * FROM users WHERE user_id = ?");
         query.bind(1, user_id);
@@ -73,7 +73,7 @@ public:
     }
 
 
-    bool doesUserExist(int user_id){
+    bool doesUserExist(int64_t user_id){
         SQLite::Statement query(db, "SELECT COUNT(*) FROM users WHERE user_id = ?;");
         query.bind(1, user_id);
 
@@ -86,7 +86,7 @@ public:
     }
 
 
-    int countReferrals(int referrer_id){
+    int countReferrals(int64_t referrer_id){
         SQLite::Statement query(db, "SELECT COUNT(*) FROM users WHERE referrer_id = ?;");
         query.bind(1, referrer_id);
 

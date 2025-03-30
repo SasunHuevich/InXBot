@@ -30,7 +30,7 @@ int main() {
     
     bot.getEvents().onCommand("start", [&bot,  &users_db](TgBot::Message::Ptr message) {
         bot.getApi().sendMessage(message->chat->id, "Привет!", nullptr, 0, botButtons(bot));
-        int user_id = message->from->id;
+        int64_t user_id = message->from->id;
         bot.getApi().sendMessage(message->chat->id, "Ваша ссылка: https://t.me/" + bot.getApi().getMe()->username + "?start=" + std::to_string(user_id));
 
         if(!users_db.doesUserExist(user_id)) {
@@ -76,7 +76,6 @@ int main() {
         printf("Bot username: %s\n", bot.getApi().getMe()->username.c_str());
         TgBot::TgLongPoll longPoll(bot);
         while (true) {
-            printf("Long poll started\n");
             longPoll.start();
         }
     } catch (TgBot::TgException& e) {
