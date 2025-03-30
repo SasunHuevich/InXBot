@@ -1,4 +1,4 @@
 build/
 db/
-
+.vscode/
 config.hpp

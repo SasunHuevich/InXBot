@@ -2,19 +2,46 @@
 #include <tgbot/tgbot.h>
 #include <config.hpp>
 #include <database_connector.hpp>
-
+#include <algorithm> // Для std::all_of
+#include <cctype>    // Для std::isdigit
+#include <string> // Для std::stoi
+#include <filesystem>
 
 int main() {
 
-
-    DatabaseConnector users_db("users.db");
+    std::filesystem::create_directory("db");
+    DatabaseConnector users_db("db/users.db");
     users_db.createTableUsers();
-
     TgBot::Bot bot(TG_BOT_TOKEN);
-    bot.getEvents().onCommand("start", [&bot](TgBot::Message::Ptr message) {
+
+    
+    bot.getEvents().onCommand("start", [&bot,  &users_db](TgBot::Message::Ptr message) {
         bot.getApi().sendMessage(message->chat->id, "Привет!");
+        int user_id = message->from->id;
+        bot.getApi().sendMessage(message->chat->id, "Ваша ссылка: https://t.me/" + bot.getApi().getMe()->username + "?start=" + std::to_string(user_id));
+        if(!users_db.doesUserExist(user_id)) {
+            if(message->text.find(" ") != std::string::npos) {
+                std::string param = message->text.substr(message->text.find(" ") + 1);
+                
+                if(!param.empty() && std::all_of(param.begin(), param.end(), ::isdigit)){
+                    users_db.insertUser(user_id, message->from->username, std::stoi(param));
+                    std::string refer = users_db.getUsernameById(std::stoi(param));
+                    bot.getApi().sendMessage(message->chat->id, "Ваш реферал: " + users_db.getUsernameById(std::stoi(param)));
+                }
+                else{
+                    bot.getApi().sendMessage(message->chat->id, "Реферальная ссылка неверна!");
+                }
+            }
+            else{
+                users_db.insertUser(user_id, message->from->username);
+            }
+        }
+        else{
+            bot.getApi().sendMessage(message->chat->id, "Вы уже зарегистрированы!");
+        }
         
     });
+
 
     bot.getEvents().onAnyMessage([&bot](TgBot::Message::Ptr message) {
         printf("User wrote %s\n", message->text.c_str());
@@ -23,6 +50,7 @@ int main() {
         }
         bot.getApi().sendMessage(message->chat->id, "Ваше сообщение: " + message->text);
     });
+
 
     try {
         printf("Bot username: %s\n", bot.getApi().getMe()->username.c_str());
