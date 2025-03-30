@@ -84,6 +84,18 @@ public:
 
         return false;
     }
+
+
+    int countReferrals(int referrer_id){
+        SQLite::Statement query(db, "SELECT COUNT(*) FROM users WHERE referrer_id = ?;");
+        query.bind(1, referrer_id);
+
+        if (query.executeStep()) {
+            return query.getColumn(0).getInt();
+        }
+    
+        return 0; 
+    }
     
 
     //TODO: Метод для бэкапов

@@ -7,6 +7,19 @@
 #include <string> // Для std::stoi
 #include <filesystem>
 
+
+TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot){
+    TgBot::ReplyKeyboardMarkup::Ptr keyboard(new TgBot::ReplyKeyboardMarkup());
+    TgBot::KeyboardButton::Ptr referrals(new TgBot::KeyboardButton());
+    referrals->text = "Refferals";
+
+    keyboard->keyboard = {{referrals}};
+    keyboard->resizeKeyboard = true;  // Уменьшаем клавиатуру, чтобы она не занимала весь экран
+    keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
+    return keyboard;
+}
+
+
 int main() {
 
     std::filesystem::create_directory("db");
@@ -16,9 +29,10 @@ int main() {
 
     
     bot.getEvents().onCommand("start", [&bot,  &users_db](TgBot::Message::Ptr message) {
-        bot.getApi().sendMessage(message->chat->id, "Привет!");
+        bot.getApi().sendMessage(message->chat->id, "Привет!", nullptr, 0, botButtons(bot));
         int user_id = message->from->id;
         bot.getApi().sendMessage(message->chat->id, "Ваша ссылка: https://t.me/" + bot.getApi().getMe()->username + "?start=" + std::to_string(user_id));
+
         if(!users_db.doesUserExist(user_id)) {
             if(message->text.find(" ") != std::string::npos) {
                 std::string param = message->text.substr(message->text.find(" ") + 1);
@@ -43,12 +57,18 @@ int main() {
     });
 
 
-    bot.getEvents().onAnyMessage([&bot](TgBot::Message::Ptr message) {
+    bot.getEvents().onAnyMessage([&bot, &users_db](TgBot::Message::Ptr message) {
         printf("User wrote %s\n", message->text.c_str());
         if (StringTools::startsWith(message->text, "/start")) {
             return;
         }
-        bot.getApi().sendMessage(message->chat->id, "Ваше сообщение: " + message->text);
+        else if (message->text == "Refferals") {
+            bot.getApi().sendMessage(message->chat->id, "Количество ваших рефераллов: " + std::to_string(users_db.countReferrals(message->from->id)));
+        }
+        else{
+            bot.getApi().sendMessage(message->chat->id, "Ваше сообщение: " + message->text);
+        }
+        
     });
 
 
