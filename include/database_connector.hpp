@@ -31,7 +31,8 @@ public:
     }
     
 
-
+    //TODO: Если пользователя не вставило запись должна где-то сохраниться чтобы записать в будущем
+    //TODO: Переход на транзакции
     void insertUser(int64_t user_id, const std::string& name, std::optional<int64_t> referrer_id = std::nullopt) {
         try{
             std::string queryStr = "INSERT INTO users (user_id, name, referrer_id) VALUES (?, ?, ?)";

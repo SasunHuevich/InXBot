@@ -55,3 +55,9 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j4
 sudo make install
 ```
+
+Установка CURL
+
+```shell
+sudo apt install -y libcurl4-openssl-dev
+```

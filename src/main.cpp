@@ -21,6 +21,8 @@ TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot){
 
 
 int main() {
+    //TODO: Не должно открываться две версии одновременно
+    //TODO: Поток для бд сделать отдельно
 
     std::filesystem::create_directory("db");
     DatabaseConnector users_db("db/users.db");
