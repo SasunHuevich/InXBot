@@ -3,6 +3,11 @@
 
 #include <iostream>
 #include <curl/curl.h>
+#include <rapidjson/document.h>
+#include <fstream>
+#include <sstream>
+#include <jwt-cpp/jwt.h>
+
 
 class SheetConnector{
 
@@ -25,9 +30,24 @@ public:
         output->append((char*)contents, size * nmemb);
     }
 
+    
+    rapidjson::Document loadServiceAccountKey(const std::string& filename) {
+        std::ifstream file(filename);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        rapidjson::Document doc;
+        doc.Parse(buffer.str().c_str());
+        return doc;
+    }
+
 
     std::string getRangeData(const std::string& range) {
+        CURL* curl = curl_easy_init(); // По сути дескриптор
+        std::string readBuffer;
 
+        if(curl) {
+            std::string url = "";
+        }
     }
 
 };

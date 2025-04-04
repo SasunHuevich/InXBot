@@ -1,0 +1,12 @@
+[requires]
+rapidjson/cci.20230929
+openssl/3.2.0
+sqlitecpp/3.3.0
+sqlite3/3.45.0
+libcurl/8.4.0
+jwt-cpp/0.6.0
+
+
+[generators]
+CMakeToolchain
+CMakeDeps
