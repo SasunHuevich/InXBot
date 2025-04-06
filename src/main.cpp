@@ -6,6 +6,7 @@
 #include <cctype>    // Для std::isdigit
 #include <string> // Для std::stoi
 #include <filesystem>
+#include <sheet_connector.hpp>
 
 
 TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot){
@@ -23,7 +24,9 @@ TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot){
 int main() {
     //TODO: Не должно открываться две версии одновременно
     //TODO: Поток для бд сделать отдельно
-
+    SheetConnector gg("gg", "gg");
+    std::cout << gg.getAcessToken(gg.loadServiceAccountKey("service_account.json"));
+    
     std::filesystem::create_directory("db");
     DatabaseConnector users_db("db/users.db");
     users_db.createTableUsers();

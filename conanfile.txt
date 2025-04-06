@@ -4,7 +4,8 @@ openssl/3.2.0
 sqlitecpp/3.3.0
 sqlite3/3.45.0
 libcurl/8.4.0
-jwt-cpp/0.6.0
+jwt-cpp/0.7.1
+nlohmann_json/3.11.2
 
 
 [generators]

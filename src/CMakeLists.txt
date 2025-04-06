@@ -7,6 +7,7 @@ find_package(SQLite3 REQUIRED)
 find_package(CURL REQUIRED)
 find_package(jwt-cpp REQUIRED)
 find_package(TgBot REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 
 add_executable(${BOT}
@@ -22,6 +23,7 @@ target_link_libraries(${BOT} PRIVATE
     SQLite::SQLite3
     CURL::libcurl
     jwt-cpp::jwt-cpp
+    nlohmann_json::nlohmann_json
 )
 
 

@@ -4,3 +4,4 @@ db/
 config.hpp
 CMakeUserPresets.json
 libs/
+service_account.json
