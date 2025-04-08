@@ -7,6 +7,8 @@
 
 std::string TG_BOT_TOKEN ="6653096426:AAFS69aAx7gG8JPew5HtjSIPdqUSsQB6bi4";
 std::string DB_NAME = "";
+std::string SERVICE_ACCOUNT_FILE = "service_account.json";
+std::string SPREADSHEET_ID = "1Qvxke0APj_u7fGcCqJTRnpkLoUfaT4F4gaaRfmEp1fw"
 ```
 
 ```Shell

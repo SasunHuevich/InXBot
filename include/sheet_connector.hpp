@@ -20,11 +20,10 @@ class SheetConnector{
 
 
 private:
-    std::string api_key;
     std::string  spreadsheet_id; // хз зачем он нужен
 
 public:
-    SheetConnector(const std::string& api_key, const std::string& spreadsheet_id) : api_key(api_key), spreadsheet_id(spreadsheet_id) {
+    SheetConnector(const std::string& spreadsheet_id) : spreadsheet_id(spreadsheet_id) {
         curl_global_init(CURL_GLOBAL_ALL);
     }
 
@@ -39,8 +38,8 @@ public:
     }
 
     
-    rapidjson::Document loadServiceAccountKey(const std::string& filename) {
-        std::ifstream file(filename);
+    rapidjson::Document loadServiceAccountKey() {
+        std::ifstream file(SERVICE_ACCOUNT_FILE);
         std::stringstream buffer;
         buffer << file.rdbuf();
         rapidjson::Document doc;
@@ -49,19 +48,8 @@ public:
     }
 
 
-    std::string readKeyToString(const std::string& filePath) {
-        std::ifstream keyFile(filePath);
-        if (!keyFile.is_open()) {
-            throw std::runtime_error("Ошибка: Не удалось открыть файл с ключом!");
-        }
-    
-        std::stringstream buffer;
-        buffer << keyFile.rdbuf();  // Читаем весь файл в поток
-        return buffer.str();        // Возвращаем как строку
-    }
-
-
-    std::string getAcessToken(const rapidjson::Document& doc) {
+    std::string getAcessToken() {
+        rapidjson::Document doc = loadServiceAccountKey();
         std::string privateKey = doc["private_key"].GetString();
         std::string clientEmail = doc["client_email"].GetString();
 
@@ -115,6 +103,42 @@ public:
         }
 
         return doc_res["access_token"].GetString();
+    }
+
+
+    void updateDbWithSheets() {
+        std::string accessToken = getAcessToken();
+        std::string range = "Лист1!A1:B2";
+
+        // URL для чтения данных с Google Sheets API
+        std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values/" + range;
+
+        // Настройка cURL
+        CURL* curl = curl_easy_init();
+        if (curl) {
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            
+            struct curl_slist* headers = NULL;
+            headers = curl_slist_append(headers, ("Authorization: Bearer " + accessToken).c_str());
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+            
+            std::string readBuffer;
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+            
+            // Выполняем запрос
+            CURLcode res = curl_easy_perform(curl);
+            
+            if (res != CURLE_OK) {
+                std::cerr << "Ошибка CURL: " << curl_easy_strerror(res) << std::endl;
+            } else {
+                // Обрабатываем ответ
+                std::cout << "Ответ от Google Sheets API:\n" << readBuffer << std::endl;
+            }
+            
+            curl_easy_cleanup(curl);
+            curl_slist_free_all(headers);
+        }
     }
 
 };

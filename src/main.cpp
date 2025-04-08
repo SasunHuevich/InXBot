@@ -24,8 +24,8 @@ TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot){
 int main() {
     //TODO: Не должно открываться две версии одновременно
     //TODO: Поток для бд сделать отдельно
-    SheetConnector gg("gg", "gg");
-    gg.getAcessToken(gg.loadServiceAccountKey("service_account.json"));
+    SheetConnector gg(SPREADSHEET_ID);
+    gg.updateDbWithSheets();
     
     std::filesystem::create_directory("db");
     DatabaseConnector users_db("db/users.db");
