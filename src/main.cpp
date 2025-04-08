@@ -25,7 +25,7 @@ int main() {
     //TODO: Не должно открываться две версии одновременно
     //TODO: Поток для бд сделать отдельно
     SheetConnector gg("gg", "gg");
-    std::cout << gg.getAcessToken(gg.loadServiceAccountKey("service_account.json"));
+    gg.getAcessToken(gg.loadServiceAccountKey("service_account.json"));
     
     std::filesystem::create_directory("db");
     DatabaseConnector users_db("db/users.db");

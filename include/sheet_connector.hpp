@@ -61,37 +61,12 @@ public:
     }
 
 
-    void convert_key() {
-        std::string private_key = loadServiceAccountKey(SERVICE_ACCOUNT_FILE)["private_key"].GetString();
-        std::string pem_file = "google_key.pem";
-        std::ofstream pem(pem_file);
-        std::string output_key_path = "rsa_private_key.pem";
-
-        if (!pem.is_open()) {
-            throw std::runtime_error("Failed to create google_key.pem file.");
-        }
-        pem << private_key;
-        pem.close();
-
-        std::string command = "openssl pkcs8 -inform PEM -nocrypt -in " + pem_file + " | openssl rsa -out " + output_key_path;
-        int result = system(command.c_str());
-
-        if (result != 0) {
-            throw std::runtime_error("OpenSSL conversion failed.");
-        }
-
-        std::cout << "RSA private key saved to: " << output_key_path << std::endl;
-    }
-
-
     std::string getAcessToken(const rapidjson::Document& doc) {
-        //std::string privateKey = doc["private_key"].GetString();
-        std::string privateKey = readKeyToString("rsa_private_key.pem");
+        std::string privateKey = doc["private_key"].GetString();
         std::string clientEmail = doc["client_email"].GetString();
-        
+
         auto now = std::chrono::system_clock::now();
         auto exp = now + std::chrono::minutes(60);
-        //auto rsa = jwt::algorithm::rs256("", "rsa_private_key.pem", "", "RS256");
         auto rsa = jwt::algorithm::rs256("", privateKey, "", "RS256");
 
         std::string jwt = jwt::create()
@@ -99,6 +74,7 @@ public:
         .set_audience("https://oauth2.googleapis.com/token")
         .set_issued_at(now)
         .set_expires_at(exp)
+        .set_payload_claim("scope", jwt::claim(std::string("https://www.googleapis.com/auth/spreadsheets")))
         .set_type("JWT")
         .set_algorithm("RS256")
         .sign(rsa);
@@ -106,31 +82,39 @@ public:
         std::cout << "Ключ: " << privateKey.substr(0, 50) << "..." << std::endl;
         std::cout << "JWT: " << jwt << std::endl;
         CURL* curl = curl_easy_init();
-        std::cout << "GG" << std::endl;
 
         //TODO: Возможно нужно как-то обработать этот случай
         if(!curl) return "";
-        std::cout << "GG1" << std::endl;
         std::string postData = "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=" + jwt;
         std::string readBuffer;
 
         curl_easy_setopt(curl, CURLOPT_URL, "https://oauth2.googleapis.com/token");
-        curl_easy_setopt(curl, CURLOPT_POST, 1L);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
-
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, [](char* ptr, size_t size, size_t nmemb, std::string* data) {
-            data->append(ptr, size * nmemb);
-            return size * nmemb;
-        });
+        curl_easy_setopt(curl, CURLOPT_POST, 1L);
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // для логирования
+       
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-
-        curl_easy_perform(curl); //Выполняем запрос
+        // Выполнение запроса
+        CURLcode res = curl_easy_perform(curl);
+        if (res != CURLE_OK) {
+            std::cerr << "Ошибка CURL: " << curl_easy_strerror(res) << std::endl;
+            curl_easy_cleanup(curl);
+            return "";
+        }
         curl_easy_cleanup(curl);
 
-        std::cout << "Ответ API: " << readBuffer << std::endl;
-        rapidjson::Document response;
-        response.Parse(readBuffer.c_str());
-        return response["access_token"].GetString();
+        // Парсинг ответа
+        rapidjson::Document doc_res;
+        doc_res.Parse(readBuffer.c_str());
+        std::cout << "Ответ сервера:\n" << readBuffer << std::endl;
+
+        if (!(doc_res.HasMember("access_token") && doc_res["access_token"].IsString())) {
+            std::cerr << "Ошибка: Не найден access_token в ответе!" << std::endl;
+            return "";
+        }
+
+        return doc_res["access_token"].GetString();
     }
 
 };
