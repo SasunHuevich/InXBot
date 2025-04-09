@@ -67,8 +67,6 @@ public:
         .set_algorithm("RS256")
         .sign(rsa);
 
-        std::cout << "Ключ: " << privateKey.substr(0, 50) << "..." << std::endl;
-        std::cout << "JWT: " << jwt << std::endl;
         CURL* curl = curl_easy_init();
 
         //TODO: Возможно нужно как-то обработать этот случай
@@ -79,7 +77,7 @@ public:
         curl_easy_setopt(curl, CURLOPT_URL, "https://oauth2.googleapis.com/token");
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
         curl_easy_setopt(curl, CURLOPT_POST, 1L);
-        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // для логирования
+        //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // для логирования
        
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
@@ -95,7 +93,6 @@ public:
         // Парсинг ответа
         rapidjson::Document doc_res;
         doc_res.Parse(readBuffer.c_str());
-        std::cout << "Ответ сервера:\n" << readBuffer << std::endl;
 
         if (!(doc_res.HasMember("access_token") && doc_res["access_token"].IsString())) {
             std::cerr << "Ошибка: Не найден access_token в ответе!" << std::endl;
@@ -108,9 +105,7 @@ public:
 
     void updateDbWithSheets() {
         std::string accessToken = getAcessToken();
-        std::string range = "Лист1!A1:B2";
-
-        // URL для чтения данных с Google Sheets API
+        std::string range = "list1!A1:B1";
         std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values/" + range;
 
         // Настройка cURL
@@ -136,6 +131,38 @@ public:
                 std::cout << "Ответ от Google Sheets API:\n" << readBuffer << std::endl;
             }
             
+            curl_easy_cleanup(curl);
+            curl_slist_free_all(headers);
+        }
+    }
+
+
+    void updateSheetsWithDb() {
+        CURL* curl = curl_easy_init();
+        if(curl) {
+            const std::string accessToken = getAcessToken();
+            const std::string range = "list1!A1:B1";
+            std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values/" + range + "?valueInputOption=RAW";
+            
+
+            const std::string jsonData = R"({"range":"list1!A1:B1","majorDimension":"ROWS","values":[["Hello","World"]]})";
+
+            struct curl_slist* headers = NULL;
+            headers = curl_slist_append(headers, ("Authorization: Bearer " + accessToken).c_str());
+            headers = curl_slist_append(headers, "Content-Type: application/json");
+            headers = curl_slist_append(headers, "Accept: application/json");
+
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT"); // Используем PUT вместо POST
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonData.c_str());
+            curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
+            CURLcode res = curl_easy_perform(curl);
+
+            if(res != CURLE_OK)
+                std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+
             curl_easy_cleanup(curl);
             curl_slist_free_all(headers);
         }

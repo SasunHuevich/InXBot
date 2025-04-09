@@ -26,6 +26,7 @@ int main() {
     //TODO: Поток для бд сделать отдельно
     SheetConnector gg(SPREADSHEET_ID);
     gg.updateDbWithSheets();
+    gg.updateSheetsWithDb();
     
     std::filesystem::create_directory("db");
     DatabaseConnector users_db("db/users.db");
