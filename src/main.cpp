@@ -49,9 +49,12 @@ int main() {
                 std::string param = message->text.substr(message->text.find(" ") + 1);
                 
                 if(!param.empty() && std::all_of(param.begin(), param.end(), ::isdigit)){
-                    users_db.insertUser(user_id, message->from->username, std::stoi(param));
-                    std::string refer = users_db.getUsernameById(std::stoi(param));
-                    bot.getApi().sendMessage(message->chat->id, "Ваш реферал: " + users_db.getUsernameById(std::stoi(param)));
+                    int64_t referrer_id = std::stoll(param);
+                    users_db.insertUser(user_id, message->from->username, referrer_id);
+                    users_db.insertIntoReferrals(user_id);
+                    users_db.updateReferrersLevels(referrer_id);
+
+                    bot.getApi().sendMessage(message->chat->id, "Ваш реферал: " + users_db.getUsernameById(referrer_id));
                 }
                 else{
                     bot.getApi().sendMessage(message->chat->id, "Реферальная ссылка неверна!");
@@ -59,6 +62,7 @@ int main() {
             }
             else{
                 users_db.insertUser(user_id, message->from->username);
+                users_db.insertIntoReferrals(user_id);
             }
         }
         else{

@@ -82,11 +82,11 @@ public:
         std::string query = "CREATE TABLE IF NOT EXISTS " + tableName + " ("
                              "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                              "user_id INTEGER NOT NULL UNIQUE,"
-                             "level_1 INTEGER DEFAULT NULL,"
-                             "level_2 INTEGER DEFAULT NULL," 
-                             "level_3 INTEGER DEFAULT NULL,"
-                             "level_4 INTEGER DEFAULT NULL,"
-                             "level_5 INTEGER DEFAULT NULL);";
+                             "level_1 INTEGER DEFAULT 0,"
+                             "level_2 INTEGER DEFAULT 0," 
+                             "level_3 INTEGER DEFAULT 0,"
+                             "level_4 INTEGER DEFAULT 0,"
+                             "level_5 INTEGER DEFAULT 0);";
         db.exec(query);
         std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
     }
@@ -117,6 +117,93 @@ public:
             }
             
         }
+    }
+
+
+    void insertIntoReferrals(int64_t user_id) {
+        try{
+            std::string queryStr = "INSERT INTO referrers (user_id) VALUES (?)";
+            SQLite::Statement query(db, queryStr);
+
+            query.bind(1, user_id);
+            query.exec();
+
+        } catch(const SQLite::Exception& e) {
+            if (std::string(e.what()).find("UNIQUE constraint failed") != std::string::npos) {
+                std::cerr << "Ошибка: Пользователь с ID " << user_id << " уже существует." << std::endl;
+            } else {
+                std::cerr << "[SQLite Error] " << e.what() << std::endl;
+            }
+            
+        }
+    }
+
+
+    void updateReferrersLevels(int64_t user_id, int level = 1) {
+        try {
+            if (level < 1 || level > 5) {
+                std::cerr << "Ошибка: Уровень должен быть от 1 до 5." << std::endl;
+                return;
+            }
+
+            SQLite::Statement query(db, "SELECT level_" + std::to_string(level) + " FROM referrers WHERE user_id = ?");
+            query.bind(1, user_id);
+            
+            int current_level = 0;
+            if (query.executeStep()) {
+                int columns = query.getColumnCount();
+                std::cout << "Columns returned: " << columns << std::endl;
+                current_level = query.getColumn(0).getInt();
+            } else {
+                std::cerr << "Реферер с user_id = " << user_id << " не найден." << std::endl;
+                return;
+            }
+    
+            current_level++;
+            
+            SQLite::Statement update_query(db, "UPDATE referrers SET level_" + std::to_string(level) + " = ? WHERE user_id = ?");
+            update_query.bind(1, current_level);
+            update_query.bind(2, user_id);
+            update_query.exec();
+            
+            int64_t new_user_id = getReferrerByUserId(user_id);
+            if(new_user_id != -1) {
+                level++;
+                updateReferrersLevels(new_user_id, level);
+            }
+            
+        } catch (const SQLite::Exception& e) {
+            std::cerr << "Ошибка SQLite: " << e.what() << std::endl;
+        }
+    }
+
+
+    int64_t getReferrerByUserId(int64_t user_id) {
+        try {
+            int64_t referrer_id;
+            SQLite::Statement query(db, "SELECT * FROM users WHERE user_id = ?");
+            query.bind(1, user_id);
+            
+            if(query.executeStep()){
+                if (!query.getColumn(4).isNull()) {
+                    referrer_id = query.getColumn(4).getInt64();  // Получаем referrer_id из 5-го столбца
+                } else {
+                    std::cerr << "Реферер для user_id = " << user_id << " равен NULL." << std::endl;
+                    return -1;
+                }
+            }
+            else{
+                return -1;
+            }
+            
+
+            return referrer_id;
+
+        } catch (const SQLite::Exception& e) {
+            std::cerr << "Ошибка SQLite: " << e.what() << std::endl;
+            return -1;
+        }
+        
     }
 
 
