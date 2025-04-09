@@ -48,7 +48,7 @@ public:
     }
 
 
-    std::string getAcessToken() {
+    std::string getJwtToken() {
         rapidjson::Document doc = loadServiceAccountKey();
         std::string privateKey = doc["private_key"].GetString();
         std::string clientEmail = doc["client_email"].GetString();
@@ -67,21 +67,25 @@ public:
         .set_algorithm("RS256")
         .sign(rsa);
 
+        return jwt;
+    }
+
+
+    std::string getAcessToken() {
         CURL* curl = curl_easy_init();
 
         //TODO: Возможно нужно как-то обработать этот случай
         if(!curl) return "";
-        std::string postData = "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=" + jwt;
+        std::string postData = "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=" + getJwtToken();
         std::string readBuffer;
 
         curl_easy_setopt(curl, CURLOPT_URL, "https://oauth2.googleapis.com/token");
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
         curl_easy_setopt(curl, CURLOPT_POST, 1L);
         //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // для логирования
-       
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-        // Выполнение запроса
+
         CURLcode res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
             std::cerr << "Ошибка CURL: " << curl_easy_strerror(res) << std::endl;
@@ -90,7 +94,6 @@ public:
         }
         curl_easy_cleanup(curl);
 
-        // Парсинг ответа
         rapidjson::Document doc_res;
         doc_res.Parse(readBuffer.c_str());
 
@@ -105,8 +108,8 @@ public:
 
     void updateDbWithSheets() {
         std::string accessToken = getAcessToken();
-        std::string range = "list1!A1:B1";
-        std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values/" + range;
+        std::string range = "clients!A1:B1";
+        std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values:batchGet?ranges=clients!A1&ranges=clients!C3";
 
         // Настройка cURL
         CURL* curl = curl_easy_init();
@@ -121,13 +124,11 @@ public:
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
             
-            // Выполняем запрос
             CURLcode res = curl_easy_perform(curl);
             
             if (res != CURLE_OK) {
                 std::cerr << "Ошибка CURL: " << curl_easy_strerror(res) << std::endl;
             } else {
-                // Обрабатываем ответ
                 std::cout << "Ответ от Google Sheets API:\n" << readBuffer << std::endl;
             }
             
@@ -141,11 +142,11 @@ public:
         CURL* curl = curl_easy_init();
         if(curl) {
             const std::string accessToken = getAcessToken();
-            const std::string range = "list1!A1:B1";
+            const std::string range = "clients!A3:AD3";
             std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values/" + range + "?valueInputOption=RAW";
             
 
-            const std::string jsonData = R"({"range":"list1!A1:B1","majorDimension":"ROWS","values":[["Hello","World"]]})";
+            const std::string jsonData = R"({"range":"clients!A3:AD3","majorDimension":"ROWS","values":[["01.03.25","Артем Дадерко", "Tg", "id", "90", null, null, null, "80"]]})";
 
             struct curl_slist* headers = NULL;
             headers = curl_slist_append(headers, ("Authorization: Bearer " + accessToken).c_str());
@@ -154,15 +155,16 @@ public:
 
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT"); // Используем PUT вместо POST
+            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonData.c_str());
-            curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+            //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
             CURLcode res = curl_easy_perform(curl);
 
-            if(res != CURLE_OK)
+            if(res != CURLE_OK) {
                 std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-
+            }
+                
             curl_easy_cleanup(curl);
             curl_slist_free_all(headers);
         }
