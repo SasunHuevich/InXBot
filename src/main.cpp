@@ -27,10 +27,15 @@ int main() {
     SheetConnector gg(SPREADSHEET_ID);
     gg.updateDbWithSheets();
     gg.updateSheetsWithDb();
-    
+
     std::filesystem::create_directory("db");
     DatabaseConnector users_db("db/users.db");
     users_db.createTableUsers();
+    users_db.createTableEASY();
+    users_db.createTableELITE();
+    users_db.createTableSPOT();
+    users_db.createTableReferrers();
+
     TgBot::Bot bot(TG_BOT_TOKEN);
 
     

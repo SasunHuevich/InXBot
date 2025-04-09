@@ -17,15 +17,76 @@ public:
         std::cout << "База данных '" << dbName << "' открыта" << std::endl;
     }
 
-    //TODO: Сделать проверку на существование таблицы
+    
     void createTableUsers() {
         std::string tableName = "users";
         std::string query = "CREATE TABLE IF NOT EXISTS " + tableName + " ("
                              "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                              "user_id INTEGER NOT NULL UNIQUE,"
-                             "name TEXT,"  
+                             "name TEXT,"
+                             "phone TEXT,"  
                              "referrer_id INTEGER DEFAULT NULL,"
                              "date_registration TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
+        db.exec(query);
+        std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
+    }
+
+
+    void createTableEASY() {
+        std::string tableName = "easy";
+        std::string query = "CREATE TABLE IF NOT EXISTS " + tableName + " ("
+                             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                             "user_id INTEGER NOT NULL UNIQUE,"
+                             "api_key TEXT," 
+                             "secret_key TEXT,"   
+                             "total INTEGER DEFAULT NULL,"
+                             "profit INTEGER DEFAULT NULL,"
+                             "comission INTEGER DEFAULT NULL);";
+        db.exec(query);
+        std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
+    }
+
+
+    void createTableELITE() {
+        std::string tableName = "elite";
+        std::string query = "CREATE TABLE IF NOT EXISTS " + tableName + " ("
+                             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                             "user_id INTEGER NOT NULL UNIQUE,"
+                             "api_key TEXT," 
+                             "secret_key TEXT,"   
+                             "total INTEGER DEFAULT NULL,"
+                             "profit INTEGER DEFAULT NULL,"
+                             "comission INTEGER DEFAULT NULL);";
+        db.exec(query);
+        std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
+    }
+
+
+    void createTableSPOT() {
+        std::string tableName = "spot";
+        std::string query = "CREATE TABLE IF NOT EXISTS " + tableName + " ("
+                             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                             "user_id INTEGER NOT NULL UNIQUE,"
+                             "api_key TEXT," 
+                             "secret_key TEXT,"   
+                             "total INTEGER DEFAULT NULL,"
+                             "profit INTEGER DEFAULT NULL,"
+                             "comission INTEGER DEFAULT NULL);";
+        db.exec(query);
+        std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
+    }
+
+
+    void createTableReferrers() {
+        std::string tableName = "referrers";
+        std::string query = "CREATE TABLE IF NOT EXISTS " + tableName + " ("
+                             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                             "user_id INTEGER NOT NULL UNIQUE,"
+                             "level_1 INTEGER DEFAULT NULL,"
+                             "level_2 INTEGER DEFAULT NULL," 
+                             "level_3 INTEGER DEFAULT NULL,"
+                             "level_4 INTEGER DEFAULT NULL,"
+                             "level_5 INTEGER DEFAULT NULL);";
         db.exec(query);
         std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
     }
