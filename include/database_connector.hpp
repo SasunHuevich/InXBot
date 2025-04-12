@@ -146,6 +146,64 @@ public:
     }
 
 
+
+    void insertIntoSpot(int64_t user_id) {
+        try{
+            std::string queryStr = "INSERT INTO spot (user_id) VALUES (?)";
+            SQLite::Statement query(db, queryStr);
+
+            query.bind(1, user_id);
+            query.exec();
+
+        } catch(const SQLite::Exception& e) {
+            if (std::string(e.what()).find("UNIQUE constraint failed") != std::string::npos) {
+                std::cerr << "Ошибка: Пользователь с ID " << user_id << " уже существует." << std::endl;
+            } else {
+                std::cerr << "[SQLite Error] " << e.what() << std::endl;
+            }
+            
+        }
+    }
+
+
+
+    void insertIntoElite(int64_t user_id) {
+        try{
+            std::string queryStr = "INSERT INTO elite (user_id) VALUES (?)";
+            SQLite::Statement query(db, queryStr);
+
+            query.bind(1, user_id);
+            query.exec();
+
+        } catch(const SQLite::Exception& e) {
+            if (std::string(e.what()).find("UNIQUE constraint failed") != std::string::npos) {
+                std::cerr << "Ошибка: Пользователь с ID " << user_id << " уже существует." << std::endl;
+            } else {
+                std::cerr << "[SQLite Error] " << e.what() << std::endl;
+            }
+            
+        }
+    }
+
+
+    void insertIntoEasy(int64_t user_id) {
+        try{
+            std::string queryStr = "INSERT INTO easy (user_id) VALUES (?)";
+            SQLite::Statement query(db, queryStr);
+
+            query.bind(1, user_id);
+            query.exec();
+
+        } catch(const SQLite::Exception& e) {
+            if (std::string(e.what()).find("UNIQUE constraint failed") != std::string::npos) {
+                std::cerr << "Ошибка: Пользователь с ID " << user_id << " уже существует." << std::endl;
+            } else {
+                std::cerr << "[SQLite Error] " << e.what() << std::endl;
+            }
+            
+        }
+    }
+
     void updateReferrersLevels(int64_t user_id, int level = 1) {
         try {
             if (level < 1 || level > 5) {
@@ -257,15 +315,30 @@ public:
     //TODO: Метод для бэкапов
 
 
-    template <typename Func, typename... Args>
-    void addToQueue(Func&& func, Args&&... args) {
-        std::lock_guard<std::mutex> lock(queueMutex);
+    void newUser(int64_t user_id, const std::string& name, std::optional<int64_t> referrer_id = std::nullopt) {
+        queueMutex.lock();
 
-        operations.push_back([=]() {
-            func(std::forward<Args>(args)...);
+        operations.push_back([this, user_id, name, referrer_id]() {
+            insertUser(user_id, name, referrer_id);
+        });
+        
+        operations.push_back([this, user_id]() {
+            insertIntoReferrals(user_id);
         });
 
-        std::cout << "ADD TO QUEUE" <<std::endl;
+        operations.push_back([this, user_id]() {
+            insertIntoEasy(user_id);
+        });
+
+        operations.push_back([this, user_id]() {
+            insertIntoSpot(user_id);
+        });
+
+        operations.push_back([this, user_id]() {
+            insertIntoElite(user_id);
+        });
+
+        queueMutex.unlock();
     }
 
 
@@ -273,10 +346,11 @@ public:
         std::stack<std::function<void()>> operations_stack;
         try{
             while(running) {
-                std::lock_guard<std::mutex> lock(queueMutex);
+                queueMutex.lock();
 
                 if (operations.empty()) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    queueMutex.unlock();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                     continue;
                 }
 
@@ -301,20 +375,23 @@ public:
                         }
                         else {
                             db.exec("ROLLBACK;");
-    
+
                             while (!operations_stack.empty()) {
                                 operations.emplace_front(operations_stack.top());
                                 operations_stack.pop();
                             }
-    
+
+                            queueMutex.unlock();
                             std::cerr << "[executeBatchInsert][SQLite Error] " << errorMsg << std::endl;
                         }
+                        
                         
                     }
                     
                 }
 
                 db.exec("COMMIT;");
+                queueMutex.unlock();
                 
                 std::cout << "NEW COMMIT" << std::endl;
 
@@ -323,6 +400,7 @@ public:
                 }
             }
         } catch (const std::exception& e) {
+            queueMutex.unlock();
             std::cerr << "[executeBatchInsert][Unexpected Error] " << e.what() << std::endl;
         }
     }

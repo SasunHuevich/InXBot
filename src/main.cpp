@@ -52,9 +52,7 @@ int main() {
                 
                 if(!param.empty() && std::all_of(param.begin(), param.end(), ::isdigit)){
                     int64_t referrer_id = std::stoll(param);
-                    write_db.addToQueue([&write_db, user_id, username, referrer_id]() { write_db.insertUser(user_id, username, referrer_id); });
-                    write_db.addToQueue([&write_db, user_id]() { write_db.insertIntoReferrals(user_id); });
-                    write_db.addToQueue([&write_db, referrer_id]() { write_db.updateReferrersLevels(referrer_id); });
+                    write_db.newUser(user_id, username, referrer_id);
 
                     bot.getApi().sendMessage(message->chat->id, "Ваш реферал: " + read_db.getUsernameById(referrer_id));
                 }
@@ -63,8 +61,7 @@ int main() {
                 }
             }
             else{
-                write_db.addToQueue([&write_db, user_id, username]() { write_db.insertUser(user_id, username); });
-                write_db.addToQueue([&write_db, user_id]() { write_db.insertIntoReferrals(user_id); });
+                write_db.newUser(user_id, username);
             }
         }
         else{
