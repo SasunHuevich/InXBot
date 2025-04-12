@@ -102,106 +102,57 @@ public:
     //TODO: Если пользователя не вставило запись должна где-то сохраниться чтобы записать в будущем
     //TODO: Переход на транзакции
     void insertUser(int64_t user_id, const std::string& name, std::optional<int64_t> referrer_id = std::nullopt) {
-        try{
-            std::string queryStr = "INSERT INTO users (user_id, name, referrer_id) VALUES (?, ?, ?)";
-            SQLite::Statement query(db, queryStr);
+        std::string queryStr = "INSERT INTO users (user_id, name, referrer_id) VALUES (?, ?, ?)";
+        SQLite::Statement query(db, queryStr);
 
-            query.bind(1, user_id);
-            query.bind(2, name);
-            if(referrer_id.has_value()) {
-                query.bind(3, referrer_id.value());
-            }
-            else{
-                query.bind(3);
-            }
-            
-            query.exec();
-        } catch(const SQLite::Exception& e) {
-            if (std::string(e.what()).find("UNIQUE constraint failed") != std::string::npos) {
-                std::cerr << "Ошибка: Пользователь с ID " << user_id << " уже существует." << std::endl;
-            } else {
-                std::cerr << "[SQLite Error] " << e.what() << std::endl;
-            }
-            
+        query.bind(1, user_id);
+        query.bind(2, name);
+        if(referrer_id.has_value()) {
+            query.bind(3, referrer_id.value());
         }
+        else{
+            query.bind(3);
+        }
+        
+        query.exec();
     }
 
 
     void insertIntoReferrals(int64_t user_id) {
-        try{
-            std::string queryStr = "INSERT INTO referrers (user_id) VALUES (?)";
-            SQLite::Statement query(db, queryStr);
+        std::string queryStr = "INSERT INTO referrers (user_id) VALUES (?)";
+        SQLite::Statement query(db, queryStr);
 
-            query.bind(1, user_id);
-            query.exec();
-
-        } catch(const SQLite::Exception& e) {
-            if (std::string(e.what()).find("UNIQUE constraint failed") != std::string::npos) {
-                std::cerr << "Ошибка: Пользователь с ID " << user_id << " уже существует." << std::endl;
-            } else {
-                std::cerr << "[SQLite Error] " << e.what() << std::endl;
-            }
-            
-        }
+        query.bind(1, user_id);
+        query.exec();
     }
 
 
 
     void insertIntoSpot(int64_t user_id) {
-        try{
-            std::string queryStr = "INSERT INTO spot (user_id) VALUES (?)";
-            SQLite::Statement query(db, queryStr);
+        std::string queryStr = "INSERT INTO spot (user_id) VALUES (?)";
+        SQLite::Statement query(db, queryStr);
 
-            query.bind(1, user_id);
-            query.exec();
-
-        } catch(const SQLite::Exception& e) {
-            if (std::string(e.what()).find("UNIQUE constraint failed") != std::string::npos) {
-                std::cerr << "Ошибка: Пользователь с ID " << user_id << " уже существует." << std::endl;
-            } else {
-                std::cerr << "[SQLite Error] " << e.what() << std::endl;
-            }
-            
-        }
+        query.bind(1, user_id);
+        query.exec();
     }
 
 
 
     void insertIntoElite(int64_t user_id) {
-        try{
-            std::string queryStr = "INSERT INTO elite (user_id) VALUES (?)";
-            SQLite::Statement query(db, queryStr);
+        std::string queryStr = "INSERT INTO elite (user_id) VALUES (?)";
+        SQLite::Statement query(db, queryStr);
 
-            query.bind(1, user_id);
-            query.exec();
-
-        } catch(const SQLite::Exception& e) {
-            if (std::string(e.what()).find("UNIQUE constraint failed") != std::string::npos) {
-                std::cerr << "Ошибка: Пользователь с ID " << user_id << " уже существует." << std::endl;
-            } else {
-                std::cerr << "[SQLite Error] " << e.what() << std::endl;
-            }
-            
-        }
+        query.bind(1, user_id);
+        query.exec();
     }
 
 
     void insertIntoEasy(int64_t user_id) {
-        try{
-            std::string queryStr = "INSERT INTO easy (user_id) VALUES (?)";
-            SQLite::Statement query(db, queryStr);
+        std::string queryStr = "INSERT INTO easy (user_id) VALUES (?)";
+        SQLite::Statement query(db, queryStr);
 
-            query.bind(1, user_id);
-            query.exec();
-
-        } catch(const SQLite::Exception& e) {
-            if (std::string(e.what()).find("UNIQUE constraint failed") != std::string::npos) {
-                std::cerr << "Ошибка: Пользователь с ID " << user_id << " уже существует." << std::endl;
-            } else {
-                std::cerr << "[SQLite Error] " << e.what() << std::endl;
-            }
-            
-        }
+        query.bind(1, user_id);
+        query.exec();
     }
 
     void updateReferrersLevels(int64_t user_id, int level = 1) {
@@ -338,6 +289,10 @@ public:
             insertIntoElite(user_id);
         });
 
+        operations.push_back([this, user_id]() {
+            updateReferrersLevels(user_id);
+        });
+        
         queueMutex.unlock();
     }
 
