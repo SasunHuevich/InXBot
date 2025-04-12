@@ -15,12 +15,12 @@ class DatabaseConnector {
 
 private:
     SQLite::Database db;
-    std::atomic<bool> running(true); // Флаг для остановки потока
+    std::atomic<bool> running{true}; // Флаг для остановки потока
     std::mutex queueMutex;
     std::deque<std::function<void()>> operations;
 
 public:
-    DatabaseConnector(const std::string& dbName) : db(dbName, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE){
+    DatabaseConnector(const std::string& dbName, int openFlags) : db(dbName, openFlags){
         std::cout << "База данных '" << dbName << "' открыта" << std::endl;
     }
 
@@ -261,14 +261,14 @@ public:
     void addToQueue(Func&& func, Args&&... args) {
         std::lock_guard<std::mutex> lock(queueMutex);
 
-        operations.push_front([=]() {
+        operations.push_back([=]() {
             func(std::forward<Args>(args)...);
         });
     }
 
 
     void executeBatchInsert(SQLite::Database& db, size_t batchSize = 100) {
-        std::stack<std::function<void()>>& operations_stack;
+        std::stack<std::function<void()>> operations_stack;
         try{
             while(running) {
                 std::lock_guard<std::mutex> lock(queueMutex);
@@ -286,7 +286,7 @@ public:
                     try{
                         operations.front()(); // Выполнение операции
                         operations_stack.push(operations.front());
-                        operations.pop();
+                        operations.pop_front();
                         count++;
                     } catch (const SQLite::Exception& e) {
                         std::string errorMsg = e.what();

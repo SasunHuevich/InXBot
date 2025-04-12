@@ -29,7 +29,8 @@ int main() {
     gg.updateSheetsWithDb();
 
     std::filesystem::create_directory("db");
-    DatabaseConnector users_db("db/users.db");
+    DatabaseConnector users_db("db/users.db", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE | SQLite::OPEN_FULLMUTEX);
+    DatabaseConnector users_db1("db/users.db", SQLite::OPEN_READONLY | SQLite::OPEN_FULLMUTEX);
     users_db.createTableUsers();
     users_db.createTableEASY();
     users_db.createTableELITE();
