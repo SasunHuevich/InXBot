@@ -259,8 +259,8 @@ public:
     template <typename Func, typename... Args>
     void addToQueue(Func&& func, Args&&... args) {
         std::lock_guard<std::mutex> lock(queueMutex);
-        
-        operations.push([=]() {
+
+        operations.push_front([=]() {
             func(std::forward<Args>(args)...);
         });
     }
@@ -282,23 +282,38 @@ public:
                 size_t count = 0;
 
                 while (!operations.empty() && count < batchSize) {
-                    operations.front()(); // Выполнение операции
-                    operation_stack.push(operations.front());
-                    operations.pop();
-                    count++;
+                    try{
+                        operations.front()(); // Выполнение операции
+                        operations_stack.push(operations.front());
+                        operations.pop();
+                        count++;
+                    } catch (const SQLite::Exception& e) {
+                        std::string errorMsg = e.what();
+    
+                        if (errorMsg.find("UNIQUE constraint failed") != std::string::npos) {
+                            std::cerr << "[executeBatchInsert][UNIQUE constraint violation] Skipping operation: " << errorMsg << std::endl;
+                            operations_stack.pop();
+                            continue;
+                        }
+                        else {
+                            db.exec("ROLLBACK;");
+    
+                            while (!operations_stack.empty()) {
+                                operations.emplace_front(operations_stack.top());
+                                operations_stack.pop();
+                            }
+    
+                            std::cerr << "[executeBatchInsert][SQLite Error] " << errorMsg << std::endl;
+                        }
+                        
+                    }
+                    
                 }
 
                 db.exec("COMMIT;");
             }
-        } catch (const SQLite::Exception& e){
-            db.exec("ROLLBACK;");
-
-            while (!operations_stack.empty()){
-                operations.push_front(operations_stack.top());
-                operations_stack.pop();
-            }
-
-            std::cerr << "[executeBatchInsert][SQLite Error] " << e.what() << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "[executeBatchInsert][Unexpected Error] " << e.what() << std::endl;
         }
     }
 };
