@@ -256,6 +256,7 @@ public:
 
     //TODO: Метод для бэкапов
 
+
     template <typename Func, typename... Args>
     void addToQueue(Func&& func, Args&&... args) {
         std::lock_guard<std::mutex> lock(queueMutex);
@@ -311,6 +312,10 @@ public:
                 }
 
                 db.exec("COMMIT;");
+
+                while (!operations_stack.empty()) {
+                    operations_stack.pop();
+                }
             }
         } catch (const std::exception& e) {
             std::cerr << "[executeBatchInsert][Unexpected Error] " << e.what() << std::endl;
