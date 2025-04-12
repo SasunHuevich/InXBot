@@ -4,13 +4,20 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <iostream>
 #include <filesystem>
+#include <atomic>
+#include <mutex>
+#include <deque>
+#include <stack>
+
 
 class DatabaseConnector {
 
 
 private:
     SQLite::Database db;
-
+    std::atomic<bool> running(true); // Флаг для остановки потока
+    std::mutex queueMutex;
+    std::deque<std::function<void()>> operations;
 
 public:
     DatabaseConnector(const std::string& dbName) : db(dbName, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE){
@@ -248,6 +255,52 @@ public:
     
 
     //TODO: Метод для бэкапов
+
+    template <typename Func, typename... Args>
+    void addToQueue(Func&& func, Args&&... args) {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        
+        operations.push([=]() {
+            func(std::forward<Args>(args)...);
+        });
+    }
+
+
+    void executeBatchInsert(SQLite::Database& db, size_t batchSize = 100) {
+        std::stack<std::function<void()>>& operations_stack;
+        try{
+            while(running) {
+                std::lock_guard<std::mutex> lock(queueMutex);
+
+                if (operations.empty()) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    continue;
+                }
+
+                db.exec("BEGIN TRANSACTION;");
+
+                size_t count = 0;
+
+                while (!operations.empty() && count < batchSize) {
+                    operations.front()(); // Выполнение операции
+                    operation_stack.push(operations.front());
+                    operations.pop();
+                    count++;
+                }
+
+                db.exec("COMMIT;");
+            }
+        } catch (const SQLite::Exception& e){
+            db.exec("ROLLBACK;");
+
+            while (!operations_stack.empty()){
+                operations.push_front(operations_stack.top());
+                operations_stack.pop();
+            }
+
+            std::cerr << "[executeBatchInsert][SQLite Error] " << e.what() << std::endl;
+        }
+    }
 };
 
 #endif

@@ -104,12 +104,18 @@ public:
 
         return doc_res["access_token"].GetString();
     }
+    
+
+    int getGoogleSheetRowCount() {
+        return 0;
+    };
+
 
 
     void updateDbWithSheets() {
         std::string accessToken = getAcessToken();
-        std::string range = "clients!A1:B1";
-        std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values:batchGet?ranges=clients!A1&ranges=clients!C3";
+        std::string range = "clients!A:A";
+        std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values:batchGet?ranges=clients!A:A";
 
         // Настройка cURL
         CURL* curl = curl_easy_init();
