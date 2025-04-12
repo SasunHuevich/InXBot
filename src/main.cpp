@@ -29,41 +29,42 @@ int main() {
     gg.updateSheetsWithDb();
 
     std::filesystem::create_directory("db");
-    DatabaseConnector users_db("db/users.db", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE | SQLite::OPEN_FULLMUTEX);
-    DatabaseConnector users_db1("db/users.db", SQLite::OPEN_READONLY | SQLite::OPEN_FULLMUTEX);
-    users_db.createTableUsers();
-    users_db.createTableEASY();
-    users_db.createTableELITE();
-    users_db.createTableSPOT();
-    users_db.createTableReferrers();
+    DatabaseConnector write_db("db/users.db", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE | SQLite::OPEN_FULLMUTEX);
+    DatabaseConnector read_db("db/users.db", SQLite::OPEN_READONLY | SQLite::OPEN_FULLMUTEX);
+    std::thread insertThread(&DatabaseConnector::executeBatchInsert, std::ref(write_db));
+    write_db.createTableUsers();
+    write_db.createTableEASY();
+    write_db.createTableELITE();
+    write_db.createTableSPOT();
+    write_db.createTableReferrers();
 
     TgBot::Bot bot(TG_BOT_TOKEN);
 
     
-    bot.getEvents().onCommand("start", [&bot,  &users_db](TgBot::Message::Ptr message) {
+    bot.getEvents().onCommand("start", [&bot,  &write_db, &read_db](TgBot::Message::Ptr message) {
         bot.getApi().sendMessage(message->chat->id, "Привет!", nullptr, 0, botButtons(bot));
         int64_t user_id = message->from->id;
         bot.getApi().sendMessage(message->chat->id, "Ваша ссылка: https://t.me/" + bot.getApi().getMe()->username + "?start=" + std::to_string(user_id));
-
-        if(!users_db.doesUserExist(user_id)) {
+        std::string username = message->from->username;
+        if(!read_db.doesUserExist(user_id)) {
             if(message->text.find(" ") != std::string::npos) {
                 std::string param = message->text.substr(message->text.find(" ") + 1);
                 
                 if(!param.empty() && std::all_of(param.begin(), param.end(), ::isdigit)){
                     int64_t referrer_id = std::stoll(param);
-                    users_db.insertUser(user_id, message->from->username, referrer_id);
-                    users_db.insertIntoReferrals(user_id);
-                    users_db.updateReferrersLevels(referrer_id);
+                    write_db.addToQueue([&write_db, user_id, username, referrer_id]() { write_db.insertUser(user_id, username, referrer_id); });
+                    write_db.addToQueue([&write_db, user_id]() { write_db.insertIntoReferrals(user_id); });
+                    write_db.addToQueue([&write_db, referrer_id]() { write_db.updateReferrersLevels(referrer_id); });
 
-                    bot.getApi().sendMessage(message->chat->id, "Ваш реферал: " + users_db.getUsernameById(referrer_id));
+                    bot.getApi().sendMessage(message->chat->id, "Ваш реферал: " + read_db.getUsernameById(referrer_id));
                 }
                 else{
                     bot.getApi().sendMessage(message->chat->id, "Реферальная ссылка неверна!");
                 }
             }
             else{
-                users_db.insertUser(user_id, message->from->username);
-                users_db.insertIntoReferrals(user_id);
+                write_db.addToQueue([&write_db, user_id, username]() { write_db.insertUser(user_id, username); });
+                write_db.addToQueue([&write_db, user_id]() { write_db.insertIntoReferrals(user_id); });
             }
         }
         else{
@@ -73,13 +74,13 @@ int main() {
     });
 
 
-    bot.getEvents().onAnyMessage([&bot, &users_db](TgBot::Message::Ptr message) {
+    bot.getEvents().onAnyMessage([&bot, &write_db, &read_db](TgBot::Message::Ptr message) {
         printf("User wrote %s\n", message->text.c_str());
         if (StringTools::startsWith(message->text, "/start")) {
             return;
         }
         else if (message->text == "Refferals") {
-            bot.getApi().sendMessage(message->chat->id, "Количество ваших рефераллов: " + std::to_string(users_db.countReferrals(message->from->id)));
+            bot.getApi().sendMessage(message->chat->id, "Количество ваших рефераллов: " + std::to_string(read_db.countReferrals(message->from->id)));
         }
         else{
             bot.getApi().sendMessage(message->chat->id, "Ваше сообщение: " + message->text);
@@ -97,5 +98,7 @@ int main() {
     } catch (TgBot::TgException& e) {
         printf("error: %s\n", e.what());
     }
+
+    insertThread.join();
     return 0;
 }

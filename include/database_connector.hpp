@@ -264,10 +264,12 @@ public:
         operations.push_back([=]() {
             func(std::forward<Args>(args)...);
         });
+
+        std::cout << "ADD TO QUEUE" <<std::endl;
     }
 
 
-    void executeBatchInsert(SQLite::Database& db, size_t batchSize = 100) {
+    void executeBatchInsert() {
         std::stack<std::function<void()>> operations_stack;
         try{
             while(running) {
@@ -280,6 +282,7 @@ public:
 
                 db.exec("BEGIN TRANSACTION;");
 
+                size_t batchSize = 100;
                 size_t count = 0;
 
                 while (!operations.empty() && count < batchSize) {
@@ -312,6 +315,8 @@ public:
                 }
 
                 db.exec("COMMIT;");
+                
+                std::cout << "NEW COMMIT" << std::endl;
 
                 while (!operations_stack.empty()) {
                     operations_stack.pop();
