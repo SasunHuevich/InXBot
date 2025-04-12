@@ -23,7 +23,6 @@ TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot){
 
 int main() {
     //TODO: Не должно открываться две версии одновременно
-    //TODO: Поток для бд сделать отдельно
     SheetConnector gg(SPREADSHEET_ID);
     gg.updateDbWithSheets();
     gg.updateSheetsWithDb();
@@ -52,9 +51,15 @@ int main() {
                 
                 if(!param.empty() && std::all_of(param.begin(), param.end(), ::isdigit)){
                     int64_t referrer_id = std::stoll(param);
-                    write_db.newUser(user_id, username, referrer_id);
 
-                    bot.getApi().sendMessage(message->chat->id, "Ваш реферал: " + read_db.getUsernameById(referrer_id));
+                    if(read_db.doesUserExist(referrer_id)) {
+                        write_db.newUser(user_id, username, referrer_id);
+                        bot.getApi().sendMessage(message->chat->id, "Ваш реферал: " + read_db.getUsernameById(referrer_id));
+                    }
+                    else{
+                        write_db.newUser(user_id, username);
+                    }
+                    
                 }
                 else{
                     bot.getApi().sendMessage(message->chat->id, "Реферальная ссылка неверна!");

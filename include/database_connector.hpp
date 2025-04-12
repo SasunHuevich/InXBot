@@ -99,8 +99,6 @@ public:
     }
     
 
-    //TODO: Если пользователя не вставило запись должна где-то сохраниться чтобы записать в будущем
-    //TODO: Переход на транзакции
     void insertUser(int64_t user_id, const std::string& name, std::optional<int64_t> referrer_id = std::nullopt) {
         std::string queryStr = "INSERT INTO users (user_id, name, referrer_id) VALUES (?, ?, ?)";
         SQLite::Statement query(db, queryStr);
@@ -156,40 +154,35 @@ public:
     }
 
     void updateReferrersLevels(int64_t user_id, int level = 1) {
-        try {
-            if (level < 1 || level > 5) {
-                std::cerr << "Ошибка: Уровень должен быть от 1 до 5." << std::endl;
-                return;
-            }
+        if (level < 1 || level > 5) {
+            std::cerr << "Ошибка: Уровень должен быть от 1 до 5." << std::endl;
+            return;
+        }
 
-            SQLite::Statement query(db, "SELECT level_" + std::to_string(level) + " FROM referrers WHERE user_id = ?");
-            query.bind(1, user_id);
-            
-            int current_level = 0;
-            if (query.executeStep()) {
-                int columns = query.getColumnCount();
-                std::cout << "Columns returned: " << columns << std::endl;
-                current_level = query.getColumn(0).getInt();
-            } else {
-                std::cerr << "Реферер с user_id = " << user_id << " не найден." << std::endl;
-                return;
-            }
-    
-            current_level++;
-            
-            SQLite::Statement update_query(db, "UPDATE referrers SET level_" + std::to_string(level) + " = ? WHERE user_id = ?");
-            update_query.bind(1, current_level);
-            update_query.bind(2, user_id);
-            update_query.exec();
-            
-            int64_t new_user_id = getReferrerByUserId(user_id);
-            if(new_user_id != -1) {
-                level++;
-                updateReferrersLevels(new_user_id, level);
-            }
-            
-        } catch (const SQLite::Exception& e) {
-            std::cerr << "Ошибка SQLite: " << e.what() << std::endl;
+        SQLite::Statement query(db, "SELECT level_" + std::to_string(level) + " FROM referrers WHERE user_id = ?");
+        query.bind(1, user_id);
+        
+        int current_level = 0;
+        if (query.executeStep()) {
+            int columns = query.getColumnCount();
+            std::cout << "Columns returned: " << columns << std::endl;
+            current_level = query.getColumn(0).getInt();
+        } else {
+            std::cerr << "Реферер с user_id = " << user_id << " не найден." << std::endl;
+            return;
+        }
+
+        current_level++;
+        
+        SQLite::Statement update_query(db, "UPDATE referrers SET level_" + std::to_string(level) + " = ? WHERE user_id = ?");
+        update_query.bind(1, current_level);
+        update_query.bind(2, user_id);
+        update_query.exec();
+        
+        int64_t new_user_id = getReferrerByUserId(user_id);
+        if(new_user_id != -1) {
+            level++;
+            updateReferrersLevels(new_user_id, level);
         }
     }
 
@@ -305,7 +298,7 @@ public:
 
                 if (operations.empty()) {
                     queueMutex.unlock();
-                    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
                     continue;
                 }
 
