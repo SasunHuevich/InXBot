@@ -17,6 +17,7 @@
 #include <config.hpp>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <atomic>
+#include <database_connector.hpp>
 
 class SheetConnector{
 
@@ -196,7 +197,7 @@ public:
     }
 
     
-    rapidjson::Value getOneRowArray(SQLite::Database& db, int id) {
+    rapidjson::Value getOneRowArray(DatabaseConnector& db, int id) {
         rapidjson::Document doc;
         auto& allocator = doc.GetAllocator();
         rapidjson::Value resultArray(rapidjson::kArrayType);
@@ -206,7 +207,7 @@ public:
         users_query.bind(1, user_id);
 
         if (users_query.executeStep()) {
-            resultArray.PushBack(users_query.getColumn(6).getText(), allocator);
+            resultArray.PushBack(rapidjson::Value(users_query.getColumn(6).getText(), allocator), allocator);
             resultArray.PushBack(users_query.getColumn(2).getText(), allocator);
             resultArray.PushBack(users_query.getColumn(3).getText(), allocator);
             resultArray.PushBack(users_query.getColumn(2).getInt64(), allocator);
@@ -309,6 +310,7 @@ public:
         while(running) {
             int sheet_row_count = getRowCount().first - 2;
             int total_count = db.getTotalRowCount();
+            std::string range = "clients!A" + std::to_string(sheet_row_count + 1);
 
             if(sheet_row_count == -1 || totoal_count == -1) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10000));
@@ -316,13 +318,60 @@ public:
             }
 
             if(sheet_row_count < total_count) {
+                rapidjson::Document doc;
+                doc.AddMember("range", range, allocator);
+                doc.AddMember("majorDimension", "ROWS", allocator);
+                rapidjson::Value values(rapidjson::kArrayType);
+
                 for(int i = sheet_row_count; i <= total_count; i++) {
-                    getOneRowArray(db, i);
+                    values.PushBack(getOneRowArray(db, i), allocator);
                 }
+                doc.AddMember("values", values, allocator);
+
+                uploadToGoogleSheet(range, doc);
             }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(900000));
         }
     }
 
+
+    std::string serializeJson(rapidjson::Document& doc) {
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        doc.Accept(writer);
+        return buffer.GetString();
+    }    
+
+
+    void uploadToGoogleSheet(std::string range, rapidjson::Document doc) {
+        CURL* curl = curl_easy_init();
+        if(curl) {
+            const std::string accessToken = getAcessToken();
+            std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values/" + range + "?valueInputOption=RAW";
+            std::string jsonData = serializeJson(doc);
+
+            struct curl_slist* headers = NULL;
+            headers = curl_slist_append(headers, ("Authorization: Bearer " + accessToken).c_str());
+            headers = curl_slist_append(headers, "Content-Type: application/json");
+            headers = curl_slist_append(headers, "Accept: application/json");
+
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonData.c_str());
+            //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
+            CURLcode res = curl_easy_perform(curl);
+
+            if(res != CURLE_OK) {
+                std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+            }
+                
+            curl_easy_cleanup(curl);
+            curl_slist_free_all(headers);
+        }
+    }
 
     /*void updateSheetsWithDb() {
         CURL* curl = curl_easy_init();
