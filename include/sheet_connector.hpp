@@ -203,29 +203,29 @@ public:
         int64_t user_id = db.getUserIdById(id);
 
         SQLite::Statement users_query(db, "SELECT * FROM users WHERE user_id = ?");
-        users_query.bind(1, id);
+        users_query.bind(1, user_id);
 
         if (users_query.executeStep()) {
-            resultArray.PushBack(user_query.getColumn(6), allocator);
-            resultArray.PushBack(user_query.getColumn(2), allocator);
-            resultArray.PushBack(user_query.getColumn(3), allocator);
-            resultArray.PushBack(user_query.getColumn(2), allocator);
+            resultArray.PushBack(users_query.getColumn(6).getText(), allocator);
+            resultArray.PushBack(users_query.getColumn(2).getText(), allocator);
+            resultArray.PushBack(users_query.getColumn(3).getText(), allocator);
+            resultArray.PushBack(users_query.getColumn(2).getInt64(), allocator);
 
-            if(user_query.getColumn(4).isNull()) {
+            if(users_query.getColumn(4).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(user_query.getColumn(4), allocator);
+                resultArray.PushBack(users_query.getColumn(4).getText(), allocator);
             }
 
             resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
 
-            if(user_query.getColumn(5).isNull()) {
+            if(users_query.getColumn(5).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(user_query.getColumn(5), allocator);
+                resultArray.PushBack(users_query.getColumn(5).getInt64(), allocator);
             }   
         }
 
@@ -233,21 +233,21 @@ public:
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
 
         SQLite::Statement easy_query(db, "SELECT api_key, secret_key FROM easy WHERE user_id = ?");
-        easy_query.bind(1, id);
+        easy_query.bind(1, user_id);
 
         if(easy_query.executeStep()) {
-            if(user_query.getColumn(0).isNull()) {
+            if(easy_query.getColumn(0).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(easy_query.getColumn(0), allocator);
+                resultArray.PushBack(easy_query.getColumn(0).getText(), allocator);
             } 
 
             if(easy_query.getColumn(1).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(easy_query.getColumn(1), allocator);
+                resultArray.PushBack(easy_query.getColumn(1).getText(), allocator);
             } 
         }
 
@@ -258,21 +258,21 @@ public:
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
         
         SQLite::Statement elite_query(db, "SELECT api_key, secret_key FROM elite WHERE user_id = ?");
-        elite_query.bind(1, id);
+        elite_query.bind(1, user_id);
 
         if(elite_query.executeStep()) {
             if(elite_query.getColumn(0).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(elite_query.getColumn(0), allocator);
+                resultArray.PushBack(elite_query.getColumn(0).getText(), allocator);
             } 
 
             if(elite_query.getColumn(1).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(elite_query.getColumn(1), allocator);
+                resultArray.PushBack(elite_query.getColumn(1).getText(), allocator);
             } 
         }
 
@@ -283,21 +283,21 @@ public:
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
 
         SQLite::Statement spot_query(db, "SELECT api_key, secret_key FROM spot WHERE user_id = ?");
-        spot_query.bind(1, id);
+        spot_query.bind(1, user_id);
 
         if(spot_query.executeStep()) {
             if(spot_query.getColumn(0).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(spot_query.getColumn(0), allocator);
+                resultArray.PushBack(spot_query.getColumn(0).getText(), allocator);
             } 
 
             if(spot_query.getColumn(1).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(spot_query.getColumn(1), allocator);
+                resultArray.PushBack(spot_query.getColumn(1).getText(), allocator);
             } 
         }
 
