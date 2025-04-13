@@ -44,6 +44,7 @@ int main() {
         bot.getApi().sendMessage(message->chat->id, "Привет!", nullptr, 0, botButtons(bot));
         int64_t user_id = message->from->id;
         bot.getApi().sendMessage(message->chat->id, "Ваша ссылка: https://t.me/" + bot.getApi().getMe()->username + "?start=" + std::to_string(user_id));
+        std::string name = message->from->firstName + " " + message->from->lastName;
         std::string username = message->from->username;
         if(!read_db.doesUserExist(user_id)) {
             if(message->text.find(" ") != std::string::npos) {
@@ -53,11 +54,11 @@ int main() {
                     int64_t referrer_id = std::stoll(param);
 
                     if(read_db.doesUserExist(referrer_id)) {
-                        write_db.newUser(user_id, username, referrer_id);
+                        write_db.newUser(user_id, name, username, referrer_id);
                         bot.getApi().sendMessage(message->chat->id, "Ваш реферал: " + read_db.getUsernameById(referrer_id));
                     }
                     else{
-                        write_db.newUser(user_id, username);
+                        write_db.newUser(user_id, name, username);
                     }
                     
                 }
@@ -66,7 +67,7 @@ int main() {
                 }
             }
             else{
-                write_db.newUser(user_id, username);
+                write_db.newUser(user_id, name, username);
             }
         }
         else{
@@ -82,7 +83,7 @@ int main() {
             return;
         }
         else if (message->text == "Refferals") {
-            bot.getApi().sendMessage(message->chat->id, "Количество ваших рефераллов: " + std::to_string(read_db.countReferrals(message->from->id)));
+            //bot.getApi().sendMessage(message->chat->id, "Количество ваших рефераллов: " + std::to_string(read_db.countReferrals(message->from->id)));
         }
         else{
             bot.getApi().sendMessage(message->chat->id, "Ваше сообщение: " + message->text);

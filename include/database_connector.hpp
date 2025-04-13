@@ -31,6 +31,7 @@ public:
                              "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                              "user_id INTEGER NOT NULL UNIQUE,"
                              "name TEXT,"
+                             "username TEXT,"
                              "phone TEXT,"  
                              "referrer_id INTEGER DEFAULT NULL,"
                              "date_registration TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
@@ -99,17 +100,18 @@ public:
     }
     
 
-    void insertUser(int64_t user_id, const std::string& name, std::optional<int64_t> referrer_id = std::nullopt) {
-        std::string queryStr = "INSERT INTO users (user_id, name, referrer_id) VALUES (?, ?, ?)";
+    void insertUser(int64_t user_id, const std::string& name, const std::string& username, std::optional<int64_t> referrer_id = std::nullopt) {
+        std::string queryStr = "INSERT INTO users (user_id, name, username, referrer_id) VALUES (?, ?, ?, ?)";
         SQLite::Statement query(db, queryStr);
 
         query.bind(1, user_id);
         query.bind(2, name);
+        query.bind(3, username);
         if(referrer_id.has_value()) {
-            query.bind(3, referrer_id.value());
+            query.bind(4, referrer_id.value());
         }
         else{
-            query.bind(3);
+            query.bind(4);
         }
         
         query.exec();
@@ -244,7 +246,7 @@ public:
     }
 
 
-    int countReferrals(int64_t referrer_id){
+    /*int countReferrals(int64_t referrer_id){
         SQLite::Statement query(db, "SELECT COUNT(*) FROM users WHERE referrer_id = ?;");
         query.bind(1, referrer_id);
 
@@ -253,17 +255,28 @@ public:
         }
     
         return 0; 
-    }
+    }*/
     
+
+    int getTotalRowCount() {
+        SQLite::Statement query(db, "SELECT COUNT(*) FROM users;");
+
+        if (query.executeStep()) {
+            int count = query.getColumn(0);
+            return count;
+        }
+        
+        return -1;
+    }
 
     //TODO: Метод для бэкапов
 
 
-    void newUser(int64_t user_id, const std::string& name, std::optional<int64_t> referrer_id = std::nullopt) {
+    void newUser(int64_t user_id, const std::string& name,const std::string& username, std::optional<int64_t> referrer_id = std::nullopt) {
         queueMutex.lock();
 
-        operations.push_back([this, user_id, name, referrer_id]() {
-            insertUser(user_id, name, referrer_id);
+        operations.push_back([this, user_id, name, username, referrer_id]() {
+            insertUser(user_id, name, username, referrer_id);
         });
         
         operations.push_back([this, user_id]() {
