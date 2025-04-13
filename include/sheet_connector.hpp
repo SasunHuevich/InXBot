@@ -144,6 +144,54 @@ public:
     }
 
 
+    int getRowCount() {
+        // Настройка cURL
+        CURL* curl = curl_easy_init();
+        if (curl) {
+            std::string accessToken = getAcessToken();
+            std::string range = "clients!D:D";
+            std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values:batchGet?ranges=" + range;
+
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            
+            struct curl_slist* headers = NULL;
+            headers = curl_slist_append(headers, ("Authorization: Bearer " + accessToken).c_str());
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+            
+            std::string readBuffer;
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+            
+            CURLcode res = curl_easy_perform(curl);
+            
+            if (res == CURLE_OK) {
+                rapidjson::Document doc;
+                doc.Parse(readBuffer.c_str());
+
+                if (doc.HasParseError()) {
+                    std::cerr << "Ошибка парсинга JSON" << std::endl;
+                    return -1;
+                }
+
+                if(doc.HasMember("valueRanges") && doc["valueRanges"].IsArray()) {
+                    if(doc["valueRanges"][0].HasMember("values") && doc["valueRanges"][0]["values"].IsArray()) {
+                        return doc["valueRanges"][0]["values"].Size();
+                    }  
+                }
+                
+                return 0;
+                
+            } else {
+                std::cerr << "Ошибка CURL: " << curl_easy_strerror(res) << std::endl;
+            }
+            
+            curl_easy_cleanup(curl);
+            curl_slist_free_all(headers);
+        }
+        return -1;
+    }
+
+
     void updateSheetsWithDb() {
         CURL* curl = curl_easy_init();
         if(curl) {

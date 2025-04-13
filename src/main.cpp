@@ -25,7 +25,7 @@ int main() {
     //TODO: Не должно открываться две версии одновременно
     SheetConnector gg(SPREADSHEET_ID);
     gg.updateDbWithSheets();
-    gg.updateSheetsWithDb();
+    std::cout << gg.getRowCount() << std::endl;
 
     std::filesystem::create_directory("db");
     DatabaseConnector write_db("db/users.db", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE | SQLite::OPEN_FULLMUTEX);
