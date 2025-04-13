@@ -15,12 +15,15 @@
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <config.hpp>
+#include <SQLiteCpp/SQLiteCpp.h>
+#include <atomic>
 
 class SheetConnector{
 
 
 private:
     std::string  spreadsheet_id; // хз зачем он нужен
+    std::atomic<bool> running{true}; // Флаг для остановки потока
 
 public:
     SheetConnector(const std::string& spreadsheet_id) : spreadsheet_id(spreadsheet_id) {
@@ -192,8 +195,136 @@ public:
         return {-1, ""};
     }
 
+    
+    rapidjson::Value getOneRowArray(SQLite::Database& db, int id) {
+        rapidjson::Document doc;
+        auto& allocator = doc.GetAllocator();
+        rapidjson::Value resultArray(rapidjson::kArrayType);
+        int64_t user_id = db.getUserIdById(id);
 
-    void updateSheetsWithDb() {
+        SQLite::Statement users_query(db, "SELECT * FROM users WHERE user_id = ?");
+        users_query.bind(1, id);
+
+        if (users_query.executeStep()) {
+            resultArray.PushBack(user_query.getColumn(6), allocator);
+            resultArray.PushBack(user_query.getColumn(2), allocator);
+            resultArray.PushBack(user_query.getColumn(3), allocator);
+            resultArray.PushBack(user_query.getColumn(2), allocator);
+
+            if(user_query.getColumn(4).isNull()) {
+                resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+            }
+            else{
+                resultArray.PushBack(user_query.getColumn(4), allocator);
+            }
+
+            resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+            resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+
+            if(user_query.getColumn(5).isNull()) {
+                resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+            }
+            else{
+                resultArray.PushBack(user_query.getColumn(5), allocator);
+            }   
+        }
+
+        resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+        resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+
+        SQLite::Statement easy_query(db, "SELECT api_key, secret_key FROM easy WHERE user_id = ?");
+        easy_query.bind(1, id);
+
+        if(easy_query.executeStep()) {
+            if(user_query.getColumn(0).isNull()) {
+                resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+            }
+            else{
+                resultArray.PushBack(easy_query.getColumn(0), allocator);
+            } 
+
+            if(easy_query.getColumn(1).isNull()) {
+                resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+            }
+            else{
+                resultArray.PushBack(easy_query.getColumn(1), allocator);
+            } 
+        }
+
+        resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+        resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+        resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+        resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+        resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+        
+        SQLite::Statement elite_query(db, "SELECT api_key, secret_key FROM elite WHERE user_id = ?");
+        elite_query.bind(1, id);
+
+        if(elite_query.executeStep()) {
+            if(elite_query.getColumn(0).isNull()) {
+                resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+            }
+            else{
+                resultArray.PushBack(elite_query.getColumn(0), allocator);
+            } 
+
+            if(elite_query.getColumn(1).isNull()) {
+                resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+            }
+            else{
+                resultArray.PushBack(elite_query.getColumn(1), allocator);
+            } 
+        }
+
+        resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+        resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+        resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+        resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+        resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+
+        SQLite::Statement spot_query(db, "SELECT api_key, secret_key FROM spot WHERE user_id = ?");
+        spot_query.bind(1, id);
+
+        if(spot_query.executeStep()) {
+            if(spot_query.getColumn(0).isNull()) {
+                resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+            }
+            else{
+                resultArray.PushBack(spot_query.getColumn(0), allocator);
+            } 
+
+            if(spot_query.getColumn(1).isNull()) {
+                resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
+            }
+            else{
+                resultArray.PushBack(spot_query.getColumn(1), allocator);
+            } 
+        }
+
+        return resultArray;
+    }
+
+
+    void updateSheetsWithDb(SQLite::Database& db) {
+        while(running) {
+            int sheet_row_count = getRowCount().first - 2;
+            int total_count = db.getTotalRowCount();
+
+            if(sheet_row_count == -1 || totoal_count == -1) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+                continue;
+            }
+
+            if(sheet_row_count < total_count) {
+                for(int i = sheet_row_count; i <= total_count; i++) {
+                    getOneRowArray(db, i);
+                }
+            }
+        }
+    }
+
+
+    /*void updateSheetsWithDb() {
         CURL* curl = curl_easy_init();
         if(curl) {
             const std::string accessToken = getAcessToken();
@@ -223,7 +354,7 @@ public:
             curl_easy_cleanup(curl);
             curl_slist_free_all(headers);
         }
-    }
+    }*/
 
 };
 

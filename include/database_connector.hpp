@@ -218,6 +218,18 @@ public:
     }
 
 
+    int64_t getUserIdById(int id) {
+        SQLite::Statement query(db, "SELECT * FROM users WHERE id = ?");
+        query.bind(1, id);
+
+        if (query.executeStep()) {
+            return query.getColumn(1).getInt64();
+        }
+
+        return -1;
+    }
+
+
     std::string getUsernameById(int64_t user_id){
         std::string username;
         SQLite::Statement query(db, "SELECT * FROM users WHERE user_id = ?");
