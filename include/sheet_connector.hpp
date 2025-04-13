@@ -114,8 +114,8 @@ public:
 
     void updateDbWithSheets() {
         std::string accessToken = getAcessToken();
-        std::string range = "clients!A:A";
-        std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values:batchGet?ranges=clients!A:A";
+        std::string range = "clients!D:D";
+        std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values:batchGet?ranges=clients!D:D";
 
         // Настройка cURL
         CURL* curl = curl_easy_init();
@@ -144,7 +144,7 @@ public:
     }
 
 
-    int getRowCount() {
+    std::pair<int, std::string> getRowCount() {
         // Настройка cURL
         CURL* curl = curl_easy_init();
         if (curl) {
@@ -170,16 +170,17 @@ public:
 
                 if (doc.HasParseError()) {
                     std::cerr << "Ошибка парсинга JSON" << std::endl;
-                    return -1;
+                    return {-1, ""};
                 }
 
                 if(doc.HasMember("valueRanges") && doc["valueRanges"].IsArray()) {
                     if(doc["valueRanges"][0].HasMember("values") && doc["valueRanges"][0]["values"].IsArray()) {
-                        return doc["valueRanges"][0]["values"].Size();
+                        int size = doc["valueRanges"][0]["values"].Size();
+                        return {size,  doc["valueRanges"][0]["values"][size - 1].GetString()};
                     }  
                 }
                 
-                return 0;
+                return {0, ""};
                 
             } else {
                 std::cerr << "Ошибка CURL: " << curl_easy_strerror(res) << std::endl;
@@ -188,7 +189,7 @@ public:
             curl_easy_cleanup(curl);
             curl_slist_free_all(headers);
         }
-        return -1;
+        return {-1, ""};
     }
 
 
