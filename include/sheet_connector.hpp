@@ -180,6 +180,7 @@ public:
                 if(doc.HasMember("valueRanges") && doc["valueRanges"].IsArray()) {
                     if(doc["valueRanges"][0].HasMember("values") && doc["valueRanges"][0]["values"].IsArray()) {
                         int size = doc["valueRanges"][0]["values"].Size();
+                        std::cout << "size" << size << std::endl;
                         return {size,  doc["valueRanges"][0]["values"][size - 1].GetString()};
                     }  
                 }
@@ -197,18 +198,18 @@ public:
     }
 
     
-    rapidjson::Value getOneRowArray(DatabaseConnector& db, int id) {
-        rapidjson::Document doc;
-        auto& allocator = doc.GetAllocator();
+    rapidjson::Value getOneRowArray(DatabaseConnector& db, int id, rapidjson::Document::AllocatorType& allocator) {
+        //rapidjson::Document doc;
+        //auto& allocator = doc.GetAllocator();
         rapidjson::Value resultArray(rapidjson::kArrayType);
         int64_t user_id = db.getUserIdById(id);
 
-        db.getUsersInfoForSheet(resultArray, doc.GetAllocator(), user_id);
+        db.getUsersInfoForSheet(resultArray, allocator, user_id);
 
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
 
-        db.getEasyInfoForSheet(resultArray, doc.GetAllocator(), user_id);
+        db.getEasyInfoForSheet(resultArray, allocator, user_id);
 
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
@@ -216,7 +217,7 @@ public:
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
         
-        db.getEliteInfoForSheet(resultArray, doc.GetAllocator(), user_id);
+        db.getEliteInfoForSheet(resultArray, allocator, user_id);
 
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
@@ -224,7 +225,13 @@ public:
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
         resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
 
-        db.getSpotInfoForSheet(resultArray, doc.GetAllocator(), user_id);
+        db.getSpotInfoForSheet(resultArray, allocator, user_id);
+
+
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        resultArray.Accept(writer);
+        std::cout << "massiv" << buffer.GetString() << std::endl;
 
         return resultArray;
     }
@@ -234,7 +241,8 @@ public:
         while(running) {
             int sheet_row_count = getRowCount().first - 2;
             int total_count = db.getTotalRowCount();
-            std::string range = "clients!A" + std::to_string(sheet_row_count + 1);
+            std::cout << "row count " << sheet_row_count << " total count" << total_count << std::endl;
+            std::string range = "clients!A" + std::to_string(sheet_row_count + 2 + 1);
 
             std::cout << "range " <<  range << std::endl;
 
@@ -251,10 +259,12 @@ public:
                 doc.AddMember("majorDimension", "ROWS", allocator);
                 rapidjson::Value values(rapidjson::kArrayType);
 
-                for(int i = sheet_row_count; i <= total_count; i++) {
-                    values.PushBack(getOneRowArray(db, i), allocator);
+                for(int i = sheet_row_count + 1; i <= total_count; i++) {
+                    values.PushBack(getOneRowArray(db, i, allocator), allocator);
                 }
                 doc.AddMember("values", values, allocator);
+
+                std::cout << "Json" << serializeJson(doc) << std::endl;
 
                 uploadToGoogleSheet(range, doc);
             }
