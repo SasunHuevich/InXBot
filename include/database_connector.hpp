@@ -8,6 +8,9 @@
 #include <mutex>
 #include <deque>
 #include <stack>
+#include <rapidjson/document.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/stringbuffer.h>
 
 
 class DatabaseConnector {
@@ -282,21 +285,22 @@ public:
     }
 
 
-    void getUsersInfoForSheet(rapidjson::Value& resultArray, rapidjson::Document::AllocatorType& allocator) {
+    void getUsersInfoForSheet(rapidjson::Value& resultArray, rapidjson::Document::AllocatorType& allocator, int64_t user_id) {
         SQLite::Statement users_query(db, "SELECT * FROM users WHERE user_id = ?");
         users_query.bind(1, user_id);
 
         if (users_query.executeStep()) {
-            resultArray.PushBack(users_query.getColumn(6).getText(), allocator);
-            resultArray.PushBack(users_query.getColumn(2).getText(), allocator);
-            resultArray.PushBack(users_query.getColumn(3).getText(), allocator);
-            resultArray.PushBack(users_query.getColumn(2).getInt64(), allocator);
+            resultArray.PushBack(rapidjson::Value(users_query.getColumn(6).getText(), allocator), allocator);
+            resultArray.PushBack(rapidjson::Value(users_query.getColumn(2).getText(), allocator), allocator);
+            resultArray.PushBack(rapidjson::Value(users_query.getColumn(3).getText(), allocator), allocator);
+            resultArray.PushBack(rapidjson::Value().SetInt64(users_query.getColumn(2).getInt64()), allocator);
+
 
             if(users_query.getColumn(4).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(users_query.getColumn(4).getText(), allocator);
+                resultArray.PushBack(rapidjson::Value(users_query.getColumn(4).getText(), allocator), allocator);
             }
 
             resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
@@ -306,13 +310,13 @@ public:
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(users_query.getColumn(5).getInt64(), allocator);
+                resultArray.PushBack(rapidjson::Value().SetInt64(users_query.getColumn(5).getInt64()), allocator);
             }   
         }
     }
 
 
-    void getUsersEasyForSheet(rapidjson::Value& resultArray, rapidjson::Document::AllocatorType& allocator) {
+    void getEasyInfoForSheet(rapidjson::Value& resultArray, rapidjson::Document::AllocatorType& allocator, int64_t user_id) {
         SQLite::Statement easy_query(db, "SELECT api_key, secret_key FROM easy WHERE user_id = ?");
         easy_query.bind(1, user_id);
 
@@ -321,20 +325,20 @@ public:
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(easy_query.getColumn(0).getText(), allocator);
+                resultArray.PushBack(rapidjson::Value(easy_query.getColumn(0).getText(), allocator), allocator);
             } 
 
             if(easy_query.getColumn(1).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(easy_query.getColumn(1).getText(), allocator);
+                resultArray.PushBack(rapidjson::Value(easy_query.getColumn(1).getText(), allocator), allocator);
             } 
         }
     }
 
 
-    void getUsersEliteForSheet(rapidjson::Value& resultArray, rapidjson::Document::AllocatorType& allocator) {
+    void getEliteInfoForSheet(rapidjson::Value& resultArray, rapidjson::Document::AllocatorType& allocator, int64_t user_id) {
         SQLite::Statement elite_query(db, "SELECT api_key, secret_key FROM elite WHERE user_id = ?");
         elite_query.bind(1, user_id);
 
@@ -343,20 +347,20 @@ public:
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(elite_query.getColumn(0).getText(), allocator);
+                resultArray.PushBack(rapidjson::Value(elite_query.getColumn(0).getText(), allocator), allocator);
             } 
 
             if(elite_query.getColumn(1).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(elite_query.getColumn(1).getText(), allocator);
+                resultArray.PushBack(rapidjson::Value(elite_query.getColumn(1).getText(), allocator), allocator);
             } 
         }
     }
 
 
-    void getUsersSpotForSheet(rapidjson::Value& resultArray, rapidjson::Document::AllocatorType& allocator) {
+    void getSpotInfoForSheet(rapidjson::Value& resultArray, rapidjson::Document::AllocatorType& allocator, int64_t user_id) {
         SQLite::Statement spot_query(db, "SELECT api_key, secret_key FROM spot WHERE user_id = ?");
         spot_query.bind(1, user_id);
 
@@ -365,17 +369,18 @@ public:
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(spot_query.getColumn(0).getText(), allocator);
+                resultArray.PushBack(rapidjson::Value(spot_query.getColumn(0).getText(), allocator), allocator);
             } 
 
             if(spot_query.getColumn(1).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(spot_query.getColumn(1).getText(), allocator);
+                resultArray.PushBack(rapidjson::Value(spot_query.getColumn(1).getText(), allocator), allocator);
             } 
         }
     }
+
 
     //TODO: Метод для бэкапов
 

@@ -23,16 +23,17 @@ TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot){
 
 int main() {
     //TODO: Не должно открываться две версии одновременно
-    SheetConnector gg(SPREADSHEET_ID);
-    gg.updateDbWithSheets();
-    std::cout << gg.getRowCount().second << std::endl;
+
+    SheetConnector sheet(SPREADSHEET_ID);
+    sheet.updateDbWithSheets();
+    std::cout << sheet.getRowCount().second << std::endl;
 
     std::filesystem::create_directory("db");
     DatabaseConnector write_db("db/users.db", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE | SQLite::OPEN_FULLMUTEX);
     DatabaseConnector read_db("db/users.db", SQLite::OPEN_READONLY | SQLite::OPEN_FULLMUTEX);
 
     std::thread dbThread(&DatabaseConnector::executeBatchInsert, std::ref(write_db));
-    std::thread sheetsThread(&SheetConnector::updateSheetsWithDb, std::ref(read_db));
+    std::thread sheetsThread(&SheetConnector::updateSheetsWithDb, &sheet, std::ref(read_db));
 
     write_db.createTableUsers();
     write_db.createTableEASY();
