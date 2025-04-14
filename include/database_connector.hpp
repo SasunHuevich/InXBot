@@ -291,14 +291,9 @@ public:
 
         if (users_query.executeStep()) {
             resultArray.PushBack(rapidjson::Value(users_query.getColumn(6).getText(), allocator), allocator);
-            std::cout << "col6 " << users_query.getColumn(6).getText() <<std::endl;
             resultArray.PushBack(rapidjson::Value(users_query.getColumn(2).getText(), allocator), allocator);
-            std::cout << "col2 " << users_query.getColumn(2).getText() <<std::endl;
             resultArray.PushBack(rapidjson::Value(users_query.getColumn(3).getText(), allocator), allocator);
-            std::cout << "col3 " << users_query.getColumn(3).getText() <<std::endl;
             resultArray.PushBack(rapidjson::Value().SetInt64(users_query.getColumn(1).getInt64()), allocator);
-            std::cout << "col1 " << users_query.getColumn(1).getInt64() <<std::endl;
-
 
             if(users_query.getColumn(4).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
@@ -316,7 +311,6 @@ public:
             else{
                 resultArray.PushBack(rapidjson::Value().SetInt64(users_query.getColumn(5).getInt64()), allocator);
             }   
-            std::cout << "users" << std::endl;
         }
     }
 

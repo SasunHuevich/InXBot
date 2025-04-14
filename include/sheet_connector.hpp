@@ -180,7 +180,6 @@ public:
                 if(doc.HasMember("valueRanges") && doc["valueRanges"].IsArray()) {
                     if(doc["valueRanges"][0].HasMember("values") && doc["valueRanges"][0]["values"].IsArray()) {
                         int size = doc["valueRanges"][0]["values"].Size();
-                        std::cout << "size" << size << std::endl;
                         return {size,  doc["valueRanges"][0]["values"][size - 1].GetString()};
                     }  
                 }
@@ -231,7 +230,6 @@ public:
         rapidjson::StringBuffer buffer;
         rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
         resultArray.Accept(writer);
-        std::cout << "massiv" << buffer.GetString() << std::endl;
 
         return resultArray;
     }
@@ -241,10 +239,7 @@ public:
         while(running) {
             int sheet_row_count = getRowCount().first - 2;
             int total_count = db.getTotalRowCount();
-            std::cout << "row count " << sheet_row_count << " total count" << total_count << std::endl;
             std::string range = "clients!A" + std::to_string(sheet_row_count + 2 + 1);
-
-            std::cout << "range " <<  range << std::endl;
 
             if(sheet_row_count == -1 || total_count == -1) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10000));
@@ -259,12 +254,11 @@ public:
                 doc.AddMember("majorDimension", "ROWS", allocator);
                 rapidjson::Value values(rapidjson::kArrayType);
 
+                //TODO: сделать разбивку на партии по 200 человек
                 for(int i = sheet_row_count + 1; i <= total_count; i++) {
                     values.PushBack(getOneRowArray(db, i, allocator), allocator);
                 }
                 doc.AddMember("values", values, allocator);
-
-                std::cout << "Json" << serializeJson(doc) << std::endl;
 
                 uploadToGoogleSheet(range, doc);
             }
@@ -284,11 +278,11 @@ public:
 
     void uploadToGoogleSheet(std::string range, rapidjson::Document& doc) {
         CURL* curl = curl_easy_init();
+        //TODO: Наверное следует убрать вывод curl в stdout
         if(curl) {
             const std::string accessToken = getAcessToken();
             std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values/" + range + "?valueInputOption=RAW";
             std::string jsonData = serializeJson(doc);
-            std::cout << "jsonData " << jsonData << std::endl;
 
             struct curl_slist* headers = NULL;
             headers = curl_slist_append(headers, ("Authorization: Bearer " + accessToken).c_str());
