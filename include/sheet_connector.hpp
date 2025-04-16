@@ -111,7 +111,7 @@ public:
     }
 
 
-    std::string normalizeDate(std::string& date) {
+    std::string normalizeDate(std::string date) {
         char sep = (date.find('.') != std::string::npos) ? '.' : '-';
         std::stringstream ss(date);
         std::string day;
@@ -128,9 +128,49 @@ public:
     }
     
 
-    void updateDbWithSheets() {
+    bool isStringNumeric(const std::string& str) {
+        return !str.empty() && std::find_if(str.begin(), str.end(), [](char c) {
+                   return !std::isdigit(c) && c != '.' && c != '-';}) == str.end();
+    }
+
+
+    double safeParseDouble(const rapidjson::Value& value) {
+        double result = 0.0;
+    
+        if (value.IsNumber()) {
+            result = value.GetDouble();
+        } else if (value.IsString()) {
+            std::string valStr = value.GetString();
+    
+            if (isStringNumeric(valStr)) {
+                try {
+                    result = std::stod(valStr);
+                } catch (const std::invalid_argument& e) {
+                    std::cerr << "Ошибка преобразования строки в double: " << valStr << " - " << e.what() << std::endl;
+                } catch (const std::out_of_range& e) {
+                    std::cerr << "Ошибка: строка слишком большая для double: " << valStr << " - " << e.what() << std::endl;
+                }
+            } else {
+                std::cerr << "Некорректная строка для конвертации в double: " << valStr << std::endl;
+            }
+        } else {
+            std::cerr << "Значение не является числом или строкой: " << value.GetType() << std::endl;
+        }
+    
+        return result;
+    }
+
+
+
+    void updateDbWithSheets(DatabaseConnector& db) {
         std::string accessToken = getAcessToken();
         int sheet_row_count = getRowCount().first;
+        std::cout << "sheet " << sheet_row_count << std::endl;
+
+        if(sheet_row_count == 2) {
+            return;
+        }
+
         std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + 
                           "/values:batchGet?ranges=clients!D3:D" + std::to_string(sheet_row_count) +
                           "&ranges=clients!F3:G" + std::to_string(sheet_row_count) +
@@ -167,9 +207,87 @@ public:
                     return;
                 }
 
-                for(int i = 0; i < sheet_row_count - 2; i++) {
-                    std::cout << "json: " << doc["valueRanges"][0]["values"][i].GetString() << " " << std::endl;
+                if(doc["valueRanges"][0].HasMember("values") && doc["valueRanges"][0]["values"].IsArray()) {
+                    for(int i = 0; i < sheet_row_count - 2; i++) {
+                        double balance = 0 ;
+                        double comission = 0;
+
+                        std::string date_easy = "1970-01-01";
+                        std::string status_easy = "Отключен";
+                        double total_easy = 0;
+                        double profit_easy = 0;
+                        double comission_easy = 0;
+
+                        std::string date_elite = "1970-01-01";
+                        std::string status_elite = "Отключен";
+                        double total_elite = 0;
+                        double profit_elite = 0;
+                        double comission_elite = 0;
+
+                        std::string date_spot = "1970-01-01";
+                        std::string status_spot = "Отключен";
+                        double total_spot = 0;
+                        double profit_spot = 0;
+                        double comission_spot = 0;
+
+                        if(doc["valueRanges"][0]["values"][i].Empty()) {
+                            continue;
+                        }
+ 
+                        if(doc["valueRanges"][1].HasMember("values") && doc["valueRanges"][1]["values"].IsArray()) {
+                            if(i < doc["valueRanges"][1]["values"].Size()) {
+                                auto& valRange = doc["valueRanges"][1]["values"][i];
+                                if(valRange.IsArray() && !valRange.Empty()) {
+                                    if(valRange[0].IsString() && std::string(valRange[0].GetString()).empty() == false) {
+                                        balance = safeParseDouble(valRange[0]);
+                                    }
+
+                                    if(valRange[1].IsString() && std::string(valRange[1].GetString()).empty() == false) {
+                                        comission = safeParseDouble(valRange[1]);
+                                    }
+                                }
+                            }
+                        }
+
+                        if(doc["valueRanges"][2].HasMember("values") && doc["valueRanges"][2]["values"].IsArray()) {
+                            if(i < doc["valueRanges"][2]["values"].Size()) {
+                                auto& valRange = doc["valueRanges"][2]["values"][i];
+                                if(valRange.IsArray() && !valRange.Empty()) {
+                                    if(valRange[0].IsString() && std::string(valRange[0].GetString()).empty() == false) {
+                                        date_easy = normalizeDate(valRange[0].GetString());
+                                        std::cout << date_easy << std::endl;
+                                    }
+
+                                    if(valRange[1].IsString() && std::string(valRange[1].GetString()).empty() == false) {
+                                        status_easy = valRange[1].GetString();
+                                        std::cout << status_easy << std::endl;
+                                    }
+                                }
+                            }
+                        }
+
+                        if(doc["valueRanges"][2].HasMember("values") && doc["valueRanges"][2]["values"].IsArray()) {
+                            if(i < doc["valueRanges"][2]["values"].Size()) {
+                                auto& valRange = doc["valueRanges"][2]["values"][i];
+                                if(valRange.IsArray() && !valRange.Empty()) {
+                                    if(valRange[0].IsString() && std::string(valRange[0].GetString()).empty() == false) {
+                                        date_easy = normalizeDate(valRange[0].GetString());
+                                        std::cout << date_easy << std::endl;
+                                    }
+
+                                    if(valRange[1].IsString() && std::string(valRange[1].GetString()).empty() == false) {
+                                        status_easy = valRange[1].GetString();
+                                        std::cout << status_easy << std::endl;
+                                    }
+                                }
+                            }
+                        }
+                        //db.updateDb();
+                        std::cout << "json: " << doc["valueRanges"][0]["values"][i].GetString() << " " << std::endl;
+                    }
                 }
+                
+                    
             }
             
             curl_easy_cleanup(curl);
