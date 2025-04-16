@@ -162,6 +162,28 @@ public:
     }
 
 
+    int64_t safeParseInt64(const rapidjson::Value& value) {
+        int64_t result = 0;
+        if (value.IsInt64()) {
+            result = value.GetInt64();
+        } else if (value.IsString()) {
+            std::string valStr = value.GetString();
+            try {
+                result = std::stoll(valStr);
+            } catch (const std::invalid_argument& e) {
+                std::cerr << "Ошибка преобразования строки в int64_t: " << valStr << " - " << e.what() << std::endl;
+            } catch (const std::out_of_range& e) {
+                std::cerr << "Ошибка: строка слишком большая для int64_t: " << valStr << " - " << e.what() << std::endl;
+            }
+        } else if (value.IsUint64()) {
+            result = static_cast<int64_t>(value.GetUint64());
+        } else {
+            std::cerr << "Значение не является целым числом, строкой или числом без знака: " << value.GetType() << std::endl;
+        }
+    
+        return result;
+    }
+
 
     void updateDbWithSheets(DatabaseConnector& db) {
         std::string accessToken = getAcessToken();
@@ -210,6 +232,7 @@ public:
 
                 if(doc["valueRanges"][0].HasMember("values") && doc["valueRanges"][0]["values"].IsArray()) {
                     for(int i = 0; i < sheet_row_count - 2; i++) {
+                        int64_t user_id = 0;
                         double balance = 0 ;
                         double comission = 0;
 
@@ -234,7 +257,11 @@ public:
                         if(doc["valueRanges"][0]["values"][i].Empty()) {
                             continue;
                         }
- 
+
+                        if (i < doc["valueRanges"][0]["values"].Size() && doc["valueRanges"][0]["values"].IsArray() && doc["valueRanges"][0]["values"].Size() > 0) {
+                            user_id = safeParseInt64(doc["valueRanges"][0]["values"][i][0]);
+                        }
+                        
                         if(doc["valueRanges"][1].HasMember("values") && doc["valueRanges"][1]["values"].IsArray()) {
                             if(i < doc["valueRanges"][1]["values"].Size()) {
                                 auto& valRange = doc["valueRanges"][1]["values"][i];
@@ -337,8 +364,16 @@ public:
                                 }   
                             }  
                         }
-                        //db.updateDb();
-                        std::cout << "json: " << doc["valueRanges"][0]["values"][i].GetString() << " " << std::endl;
+
+                        db.updateDb(
+                            user_id, balance, comission,
+                        
+                            date_easy, status_easy, total_easy, profit_easy, comission_easy,
+                        
+                            date_elite, status_elite, total_elite, profit_elite, comission_elite,
+                        
+                            date_spot, status_spot,  total_spot, profit_spot, comission_spot
+                        );
                     }
                 }
                 

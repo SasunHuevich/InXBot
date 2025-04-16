@@ -451,7 +451,7 @@ public:
 
 
     void updateEasy(int64_t user_id, std::string date_connection, std::string status, double total, double profit, double comission) {
-        SQLite::Statement easy(db, "UPDATE easy date_connection = ?, status = ?, total = ?, profit = ?, comission = ? WHERE user_id = ?");
+        SQLite::Statement easy(db, "UPDATE easy SET date_connection = ?, status = ?, total = ?, profit = ?, comission = ? WHERE user_id = ?");
 
         easy.bind(1, date_connection);
         easy.bind(2, status);
@@ -465,7 +465,7 @@ public:
 
 
     void updateElite(int64_t user_id, std::string date_connection, std::string status, double total, double profit, double comission) {
-        SQLite::Statement elite(db, "UPDATE elite date_connection = ?, status = ?, total = ?, profit = ?, comission = ? WHERE user_id = ?");
+        SQLite::Statement elite(db, "UPDATE elite SET date_connection = ?, status = ?, total = ?, profit = ?, comission = ? WHERE user_id = ?");
 
         elite.bind(1, date_connection);
         elite.bind(2, status);
@@ -479,7 +479,7 @@ public:
 
 
     void updateSpot(int64_t user_id, std::string date_connection, std::string status, double total, double profit, double comission) {
-        SQLite::Statement spot(db, "UPDATE spot date_connection = ?, status = ?, total = ?, profit = ?, comission = ? WHERE user_id = ?");
+        SQLite::Statement spot(db, "UPDATE spot SET date_connection = ?, status = ?, total = ?, profit = ?, comission = ? WHERE user_id = ?");
 
         spot.bind(1, date_connection);
         spot.bind(2, status);
