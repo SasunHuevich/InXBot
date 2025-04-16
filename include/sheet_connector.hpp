@@ -185,6 +185,7 @@ public:
     }
 
 
+    // TODO: Сделать разбивку на партии если столбцов слишком много
     void updateDbWithSheets(DatabaseConnector& db) {
         std::string accessToken = getAcessToken();
         int sheet_row_count = getRowCount().first;
@@ -544,39 +545,6 @@ public:
             curl_slist_free_all(headers);
         }
     }
-
-    /*void updateSheetsWithDb() {
-        CURL* curl = curl_easy_init();
-        if(curl) {
-            const std::string accessToken = getAcessToken();
-            const std::string range = "clients!A3:AD3";
-            std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values/" + range + "?valueInputOption=RAW";
-            
-
-            const std::string jsonData = R"({"range":"clients!A3:AD3","majorDimension":"ROWS","values":[["01.03.25","Артем Дадерко", "Tg", "id", "90", null, null, null, "80"]]})";
-
-            struct curl_slist* headers = NULL;
-            headers = curl_slist_append(headers, ("Authorization: Bearer " + accessToken).c_str());
-            headers = curl_slist_append(headers, "Content-Type: application/json");
-            headers = curl_slist_append(headers, "Accept: application/json");
-
-            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonData.c_str());
-            //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-
-            CURLcode res = curl_easy_perform(curl);
-
-            if(res != CURLE_OK) {
-                std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-            }
-                
-            curl_easy_cleanup(curl);
-            curl_slist_free_all(headers);
-        }
-    }*/
-
 };
 
 
