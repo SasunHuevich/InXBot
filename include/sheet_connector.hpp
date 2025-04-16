@@ -119,7 +119,7 @@ public:
     void updateDbWithSheets() {
         std::string accessToken = getAcessToken();
         std::string range = "clients!D:D";
-        std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values:batchGet?ranges=clients!D:D";
+        std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + SPREADSHEET_ID + "/values:batchGet?ranges=" + range;
 
         // Настройка cURL
         CURL* curl = curl_easy_init();
