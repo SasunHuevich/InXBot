@@ -36,8 +36,8 @@ public:
                              "name TEXT,"
                              "username TEXT,"
                              "phone TEXT," 
-                             "balance INTEGER DEFAULT NULL,"
-                             "comission INTEGER DEFAULT NULL,"
+                             "balance DOUBLE DEFAULT NULL,"
+                             "comission DOUBLE DEFAULT NULL,"
                              "referrer_id INTEGER DEFAULT NULL,"
                              "date_registration TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
         db.exec(query);
@@ -54,9 +54,9 @@ public:
                              "status TEXT,"
                              "api_key TEXT," 
                              "secret_key TEXT,"   
-                             "total INTEGER DEFAULT NULL,"
-                             "profit INTEGER DEFAULT NULL,"
-                             "comission INTEGER DEFAULT NULL);";
+                             "total DOUBLE DEFAULT NULL,"
+                             "profit DOUBLE DEFAULT NULL,"
+                             "comission DOUBLE DEFAULT NULL);";
         db.exec(query);
         std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
     }
@@ -71,9 +71,9 @@ public:
                              "status TEXT,"
                              "api_key TEXT," 
                              "secret_key TEXT,"   
-                             "total INTEGER DEFAULT NULL,"
-                             "profit INTEGER DEFAULT NULL,"
-                             "comission INTEGER DEFAULT NULL);";
+                             "total DOUBLE DEFAULT NULL,"
+                             "profit DOUBLE DEFAULT NULL,"
+                             "comission DOUBLE DEFAULT NULL);";
         db.exec(query);
         std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
     }
@@ -88,9 +88,9 @@ public:
                              "status TEXT,"
                              "api_key TEXT," 
                              "secret_key TEXT,"   
-                             "total INTEGER DEFAULT NULL,"
-                             "profit INTEGER DEFAULT NULL,"
-                             "comission INTEGER DEFAULT NULL);";
+                             "total DOUBLE DEFAULT NULL,"
+                             "profit DOUBLE DEFAULT NULL,"
+                             "comission DOUBLE DEFAULT NULL);";
         db.exec(query);
         std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
     }
@@ -419,6 +419,87 @@ public:
             updateReferrersLevels(user_id);
         });
         
+        queueMutex.unlock();
+    }
+
+
+    void updateUser(int64_t user_id, double balance, double comission) {
+        SQLite::Statement users(db, "UPDATE users SET balance = ?, comission = ? WHERE user_id = ?");
+
+        users.bind(1, balance);
+        users.bind(2, comission);
+        users.bind(3, user_id);
+
+        users.exec();  
+    }
+
+
+    void updateEasy(int64_t user_id, std::string date_connection, std::string status, double total, double profit, double comission) {
+        SQLite::Statement easy(db, "UPDATE easy date_connection = ?, status = ?, total = ?, profit = ?, comission = ? WHERE user_id = ?");
+
+        easy.bind(1, date_connection);
+        easy.bind(2, status);
+        easy.bind(3, total);
+        easy.bind(4, profit);
+        easy.bind(5, comission);
+        easy.bind(6, iser_id);
+
+        easy.exec();
+    }
+
+
+    void updateElite(int64_t user_id, std::string date_connection, std::string status, double total, double profit, double comission) {
+        SQLite::Statement elite(db, "UPDATE elite date_connection = ?, status = ?, total = ?, profit = ?, comission = ? WHERE user_id = ?");
+
+        elite.bind(1, date_connection);
+        elite.bind(2, status);
+        elite.bind(3, total);
+        elite.bind(4, profit);
+        elite.bind(5, comission);
+        elite.bind(6, iser_id);
+
+        elite.exec();
+    }
+
+
+    void updateSpot(int64_t user_id, std::string date_connection, std::string status, double total, double profit, double comission) {
+        SQLite::Statement spot(db, "UPDATE spot date_connection = ?, status = ?, total = ?, profit = ?, comission = ? WHERE user_id = ?");
+
+        spot.bind(1, date_connection);
+        spot.bind(2, status);
+        spot.bind(3, total);
+        spot.bind(4, profit);
+        spot.bind(5, comission);
+        spot.bind(6, iser_id);
+
+        spot.exec();
+    }
+    
+
+
+    void updateDb(int64_t user_id, double balance, double comission, 
+        std::string date_connection_easy, std::string status_easy, double total_easy, double profit_easy, double comission_easy, 
+        std::string date_connection_elite, std::string status_elite, double total_elite, double profit_elite, double comission_elite, 
+        std::string date_connection_spot, std::string status_spot, double total_spot, double profit_spot, double comission_spot) {
+
+        queueMutex.lock();
+
+        operations.push_back([this, user_id, balance, comission]() {
+            updateUser(user_id, balance, comission);
+        });
+
+        operations.push_back([this, user_id, date_connection_easy, status_easy, total_easy, profit_easy, comission_easy]() {
+            updateEasy(user_id, date_connection_easy, status_easy, total_easy, profit_easy, comission_easy);
+        });
+
+        operations.push_back([this, user_id, date_connection_elite, status_elite, total_elite, profit_elite, comission_elite]() {
+            updateElite(user_id, date_connection_elite, status_elite, total_elite, profit_elite, comission_elite);
+        });
+
+        operations.push_back([this, user_id, date_connection_spot, status_spot, total_spot, profit_spot, comission_spot]() {
+            updateSpot(user_id, date_connection_spot, status_spot, total_spot, profit_spot, comission_spot);
+        });
+
         queueMutex.unlock();
     }
 

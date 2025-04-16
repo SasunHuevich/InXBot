@@ -110,12 +110,6 @@ public:
     }
     
 
-    int getGoogleSheetRowCount() {
-        return 0;
-    };
-
-
-
     void updateDbWithSheets() {
         std::string accessToken = getAcessToken();
         int sheet_row_count = getRowCount().first;
@@ -146,10 +140,23 @@ public:
                 std::cerr << "Ошибка CURL: " << curl_easy_strerror(res) << std::endl;
             } else {
                 std::cout << "Ответ от Google Sheets API:\n" << readBuffer << std::endl;
+
+                rapidjson::Document doc;
+                auto& allocator = doc.GetAllocator();
+                doc.Parse(readBuffer.c_str());
+                if (!doc.IsObject() || !doc.HasMember("valueRanges")) {
+                    std::cerr << "Неверный JSON-ответ." << std::endl;
+                    return;
+                }
+
+                for(int i = 0; i < sheet_row_count - 2; i++) {
+                    std::cout << "json: " << doc["valueRanges"][0]["values"][i].GetString() << " " << std::endl;
+                }
             }
             
             curl_easy_cleanup(curl);
             curl_slist_free_all(headers);
+            
         }
     }
 
