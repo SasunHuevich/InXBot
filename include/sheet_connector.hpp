@@ -141,7 +141,8 @@ public:
             result = value.GetDouble();
         } else if (value.IsString()) {
             std::string valStr = value.GetString();
-    
+            std::replace(valStr.begin(), valStr.end(), ',', '.');
+
             if (isStringNumeric(valStr)) {
                 try {
                     result = std::stod(valStr);
@@ -255,32 +256,86 @@ public:
                                 if(valRange.IsArray() && !valRange.Empty()) {
                                     if(valRange[0].IsString() && std::string(valRange[0].GetString()).empty() == false) {
                                         date_easy = normalizeDate(valRange[0].GetString());
-                                        std::cout << date_easy << std::endl;
                                     }
 
                                     if(valRange[1].IsString() && std::string(valRange[1].GetString()).empty() == false) {
                                         status_easy = valRange[1].GetString();
-                                        std::cout << status_easy << std::endl;
                                     }
                                 }
                             }
                         }
 
-                        if(doc["valueRanges"][2].HasMember("values") && doc["valueRanges"][2]["values"].IsArray()) {
-                            if(i < doc["valueRanges"][2]["values"].Size()) {
-                                auto& valRange = doc["valueRanges"][2]["values"][i];
+                        if(doc["valueRanges"][3].HasMember("values") && doc["valueRanges"][3]["values"].IsArray()) {
+                            if(i < doc["valueRanges"][3]["values"].Size()) {
+                                auto& valRange = doc["valueRanges"][3]["values"][i];
                                 if(valRange.IsArray() && !valRange.Empty()) {
                                     if(valRange[0].IsString() && std::string(valRange[0].GetString()).empty() == false) {
-                                        date_easy = normalizeDate(valRange[0].GetString());
-                                        std::cout << date_easy << std::endl;
+                                        total_easy = safeParseDouble(valRange[0]);
                                     }
 
                                     if(valRange[1].IsString() && std::string(valRange[1].GetString()).empty() == false) {
-                                        status_easy = valRange[1].GetString();
-                                        std::cout << status_easy << std::endl;
+                                        profit_easy = safeParseDouble(valRange[1]);
                                     }
-                                }
-                            }
+
+                                    if(valRange[2].IsString() && std::string(valRange[2].GetString()).empty() == false) {
+                                       comission_easy = safeParseDouble(valRange[2]);
+                                    }
+
+                                    if(valRange[3].IsString() && std::string(valRange[3].GetString()).empty() == false) {
+                                        date_elite = normalizeDate(valRange[3].GetString());
+                                    }
+
+                                    if(valRange[4].IsString() && std::string(valRange[4].GetString()).empty() == false) {
+                                        status_elite = valRange[4].GetString();
+                                    }
+                                }   
+                            }  
+                        }
+
+                        if(doc["valueRanges"][4].HasMember("values") && doc["valueRanges"][4]["values"].IsArray()) {
+                            if(i < doc["valueRanges"][4]["values"].Size()) {
+                                auto& valRange = doc["valueRanges"][4]["values"][i];
+                                if(valRange.IsArray() && !valRange.Empty()) {
+                                    if(valRange[0].IsString() && std::string(valRange[0].GetString()).empty() == false) {
+                                        total_elite = safeParseDouble(valRange[0]);
+                                    }
+
+                                    if(valRange[1].IsString() && std::string(valRange[1].GetString()).empty() == false) {
+                                        profit_elite = safeParseDouble(valRange[1]);
+                                    }
+
+                                    if(valRange[2].IsString() && std::string(valRange[2].GetString()).empty() == false) {
+                                       comission_elite = safeParseDouble(valRange[2]);
+                                    }
+
+                                    if(valRange[3].IsString() && std::string(valRange[3].GetString()).empty() == false) {
+                                        date_spot = normalizeDate(valRange[3].GetString());
+                                    }
+
+                                    if(valRange[4].IsString() && std::string(valRange[4].GetString()).empty() == false) {
+                                        status_spot = valRange[4].GetString();
+                                    }
+                                }   
+                            }  
+                        }
+
+                        if(doc["valueRanges"][5].HasMember("values") && doc["valueRanges"][5]["values"].IsArray()) {
+                            if(i < doc["valueRanges"][5]["values"].Size()) {
+                                auto& valRange = doc["valueRanges"][5]["values"][i];
+                                if(valRange.IsArray() && !valRange.Empty()) {
+                                    if(valRange[0].IsString() && std::string(valRange[0].GetString()).empty() == false) {
+                                        total_spot = safeParseDouble(valRange[0]);
+                                    }
+
+                                    if(valRange[1].IsString() && std::string(valRange[1].GetString()).empty() == false) {
+                                        profit_spot = safeParseDouble(valRange[1]);
+                                    }
+
+                                    if(valRange[2].IsString() && std::string(valRange[2].GetString()).empty() == false) {
+                                        comission_spot = safeParseDouble(valRange[2]);
+                                    }
+                                }   
+                            }  
                         }
                         //db.updateDb();
                         std::cout << "json: " << doc["valueRanges"][0]["values"][i].GetString() << " " << std::endl;
