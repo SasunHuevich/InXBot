@@ -442,7 +442,7 @@ public:
         easy.bind(3, total);
         easy.bind(4, profit);
         easy.bind(5, comission);
-        easy.bind(6, iser_id);
+        easy.bind(6, user_id);
 
         easy.exec();
     }
@@ -456,7 +456,7 @@ public:
         elite.bind(3, total);
         elite.bind(4, profit);
         elite.bind(5, comission);
-        elite.bind(6, iser_id);
+        elite.bind(6, user_id);
 
         elite.exec();
     }
@@ -470,7 +470,7 @@ public:
         spot.bind(3, total);
         spot.bind(4, profit);
         spot.bind(5, comission);
-        spot.bind(6, iser_id);
+        spot.bind(6, user_id);
 
         spot.exec();
     }
