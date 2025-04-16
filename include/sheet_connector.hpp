@@ -19,6 +19,7 @@
 #include <atomic>
 #include <database_connector.hpp>
 
+
 class SheetConnector{
 
 
@@ -107,6 +108,23 @@ public:
         }
 
         return doc_res["access_token"].GetString();
+    }
+
+
+    std::string normalizeDate(std::string& date) {
+        char sep = (date.find('.') != std::string::npos) ? '.' : '-';
+        std::stringstream ss(date);
+        std::string day;
+        std::getline(ss, day, sep);
+        std::string month;
+        std::getline(ss, month, sep);
+        std::string year;
+        std::getline(ss, year, sep);
+        
+        if(year.length() == 2) {
+            return "20" + year + "-" + month + "-" + day;
+        }
+        return year + "-" + month + "-" + day;
     }
     
 

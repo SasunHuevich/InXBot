@@ -293,12 +293,28 @@ public:
     }
 
 
+    std::string unnormalizeDate(const std::string& date) {
+        char sep = '-';
+        std::stringstream ss(date);
+        std::string year;
+        std::getline(ss, year, sep);
+        std::string month;
+        std::getline(ss, month, sep);
+        std::string day;
+        sep = ' ';
+        std::getline(ss, day, sep);
+        
+        std::cout << day + "." + month + "." + year.substr(2) << std::endl;
+        return day + "." + month + "." + year.substr(2);
+    }
+
+
     void getUsersInfoForSheet(rapidjson::Value& resultArray, rapidjson::Document::AllocatorType& allocator, int64_t user_id) {
         SQLite::Statement users_query(db, "SELECT * FROM users WHERE user_id = ?");
         users_query.bind(1, user_id);
 
         if (users_query.executeStep()) {
-            resultArray.PushBack(rapidjson::Value(users_query.getColumn(8).getText(), allocator), allocator);
+            resultArray.PushBack(rapidjson::Value(unnormalizeDate(users_query.getColumn(8).getText()).c_str(), allocator), allocator);
             resultArray.PushBack(rapidjson::Value(users_query.getColumn(2).getText(), allocator), allocator);
             resultArray.PushBack(rapidjson::Value(users_query.getColumn(3).getText(), allocator), allocator);
             resultArray.PushBack(rapidjson::Value().SetInt64(users_query.getColumn(1).getInt64()), allocator);
