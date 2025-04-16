@@ -35,7 +35,9 @@ public:
                              "user_id INTEGER NOT NULL UNIQUE,"
                              "name TEXT,"
                              "username TEXT,"
-                             "phone TEXT,"  
+                             "phone TEXT," 
+                             "balance INTEGER DEFAULT NULL,"
+                             "comission INTEGER DEFAULT NULL,"
                              "referrer_id INTEGER DEFAULT NULL,"
                              "date_registration TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
         db.exec(query);
@@ -296,7 +298,7 @@ public:
         users_query.bind(1, user_id);
 
         if (users_query.executeStep()) {
-            resultArray.PushBack(rapidjson::Value(users_query.getColumn(6).getText(), allocator), allocator);
+            resultArray.PushBack(rapidjson::Value(users_query.getColumn(8).getText(), allocator), allocator);
             resultArray.PushBack(rapidjson::Value(users_query.getColumn(2).getText(), allocator), allocator);
             resultArray.PushBack(rapidjson::Value(users_query.getColumn(3).getText(), allocator), allocator);
             resultArray.PushBack(rapidjson::Value().SetInt64(users_query.getColumn(1).getInt64()), allocator);
@@ -311,11 +313,11 @@ public:
             resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
 
-            if(users_query.getColumn(5).isNull()) {
+            if(users_query.getColumn(7).isNull()) {
                 resultArray.PushBack(rapidjson::Value().SetNull(), allocator);
             }
             else{
-                resultArray.PushBack(rapidjson::Value().SetInt64(users_query.getColumn(5).getInt64()), allocator);
+                resultArray.PushBack(rapidjson::Value().SetInt64(users_query.getColumn(7).getInt64()), allocator);
             }   
         }
     }
