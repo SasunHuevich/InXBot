@@ -27,6 +27,26 @@ static std::unordered_map<std::string, std::map<std::string, std::string>> trans
         {"ru", "🇷🇺 Вы выбрали Русский язык."}
     }},
 
+    {"admin_message", {
+        {"en", "👑 Greetings, Supreme One. How may I serve you today?"},
+        {"ru", "👑 Здравствуйте, Наивысший. Чем могу быть полезен?"}
+    }},
+
+    {"database_update_message", {
+        {"en", "⏳ The database will be updated within 15 minutes."},
+        {"ru", "⏳ База данных будет обновлена в течение 15 минут."}
+    }},
+
+    {"btn_admin_panel", {
+        {"en", "👑 Admin Panel"},
+        {"ru", "👑 Панель администратора"}
+    }},
+
+    {"btn_update_database", {
+        {"en", "📄 Update Database"},
+        {"ru", "📄 Обновить базу данных"}
+    }},
+
     {"btn_briefing", {
         {"en", "📋 Briefing"},
         {"ru", "📋 Инструктаж"}

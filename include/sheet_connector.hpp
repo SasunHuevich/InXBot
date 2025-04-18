@@ -26,6 +26,7 @@ class SheetConnector{
 private:
     std::string  spreadsheet_id; // хз зачем он нужен
     std::atomic<bool> running{true}; // Флаг для остановки потока
+    std::atomic<bool> shouldUpdate{false};
 
 public:
     SheetConnector(const std::string& spreadsheet_id) : spreadsheet_id(spreadsheet_id) {
@@ -475,6 +476,11 @@ public:
     }
 
 
+    void triggerUpdate(){
+        shouldUpdate = true;
+    }
+
+
     void updateSheetsWithDb(DatabaseConnector& db) {
         while(running) {
             int sheet_row_count = getRowCount().first - 2;
@@ -501,6 +507,12 @@ public:
                 doc.AddMember("values", values, allocator);
 
                 uploadToGoogleSheet(range, doc);
+            }
+
+
+            if(shouldUpdate) {
+                updateDbWithSheets(db);
+                shouldUpdate = false;
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(900000));

@@ -10,8 +10,20 @@
 #include <localization.hpp>
 
 
-TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot, const std::string& language){
+bool isAdmin(int64_t userId) {
+    return std::find(adminIds.begin(), adminIds.end(), userId) != adminIds.end();
+}
+
+
+TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot, const std::string& language, bool isAdmin){
     TgBot::ReplyKeyboardMarkup::Ptr keyboard(new TgBot::ReplyKeyboardMarkup());
+
+    if (isAdmin) {
+        TgBot::KeyboardButton::Ptr btnAdminPanel(new TgBot::KeyboardButton());
+        btnAdminPanel->text = getText("btn_admin_panel", language);
+
+        keyboard->keyboard.push_back({btnAdminPanel});
+    }
 
     TgBot::KeyboardButton::Ptr btnBriefing(new TgBot::KeyboardButton());
     btnBriefing->text = getText("btn_briefing", language);
@@ -28,12 +40,9 @@ TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot, const std::string& l
     TgBot::KeyboardButton::Ptr btnInstructions(new TgBot::KeyboardButton());
     btnInstructions->text = getText("btn_instructions", language);
 
-    // Располагаем кнопки в 2 ряда: 3 сверху, 2 снизу
-    keyboard->keyboard = {
-        {btnBriefing, btnProfile},
-        {btnDescription, btnInvite},
-        {btnInstructions}
-    };
+    keyboard->keyboard.push_back({btnBriefing, btnProfile});
+    keyboard->keyboard.push_back({btnDescription, btnInvite});
+    keyboard->keyboard.push_back({btnInstructions});
 
     keyboard->resizeKeyboard = true;  // Уменьшаем клавиатуру, чтобы она не занимала весь экран
     keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
@@ -91,18 +100,34 @@ TgBot::InlineKeyboardMarkup::Ptr botLanguageMenu() {
 }
 
 
+TgBot::ReplyKeyboardMarkup::Ptr botAdminPanel(TgBot::Bot &bot, const std::string& language){
+    TgBot::ReplyKeyboardMarkup::Ptr keyboard(new TgBot::ReplyKeyboardMarkup());
+
+    TgBot::KeyboardButton::Ptr btnUpdateGoogleTable(new TgBot::KeyboardButton());
+    btnUpdateGoogleTable->text = getText("btn_update_database", language);
+
+    TgBot::KeyboardButton::Ptr btnBack(new TgBot::KeyboardButton());
+    btnBack->text = getText("btn_back", language);
+
+    keyboard->keyboard.push_back({btnUpdateGoogleTable});
+    keyboard->keyboard.push_back({btnBack});
+
+    keyboard->resizeKeyboard = true;  // Уменьшаем клавиатуру, чтобы она не занимала весь экран
+    keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
+
+    return keyboard;
+}
+
+
 
 int main() {
     //TODO: Не должно открываться две версии одновременно
 
     SheetConnector sheet(SPREADSHEET_ID);
-    
-    std::cout << sheet.getRowCount().second << std::endl;
 
     std::filesystem::create_directory("db");
     DatabaseConnector write_db("db/users.db", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE | SQLite::OPEN_FULLMUTEX);
     DatabaseConnector read_db("db/users.db", SQLite::OPEN_READONLY | SQLite::OPEN_FULLMUTEX);
-    sheet.updateDbWithSheets(write_db);
 
     std::thread dbThread(&DatabaseConnector::executeBatchInsert, std::ref(write_db));
     std::thread sheetsThread(&SheetConnector::updateSheetsWithDb, &sheet, std::ref(write_db));
@@ -121,7 +146,7 @@ int main() {
         int64_t user_id = message->from->id;
         std::string user_language = read_db.getUserLanguage(user_id);
 
-        bot.getApi().sendMessage(message->chat->id, getText("start_message", user_language), nullptr, 0, botButtons(bot, user_language));
+        bot.getApi().sendMessage(message->chat->id, getText("start_message", user_language), nullptr, 0, botButtons(bot, user_language, isAdmin(user_id)));
         bot.getApi().sendMessage(message->chat->id, getText("language_selection", user_language), nullptr, 0, botLanguageMenu()); 
 
         std::string name = message->from->firstName + " " + message->from->lastName;
@@ -148,10 +173,10 @@ int main() {
     bot.getEvents().onCallbackQuery([&bot, &write_db](TgBot::CallbackQuery::Ptr query) {
         if (query->data == "lang_ru") {
             write_db.UserLanguageToQueue(query->from->id, "ru");
-            bot.getApi().sendMessage(query->message->chat->id, getText("language_selected", "ru"), nullptr, 0, botButtons(bot, "ru"));
+            bot.getApi().sendMessage(query->message->chat->id, getText("language_selected", "ru"), nullptr, 0, botButtons(bot, "ru", isAdmin(query->from->id)));
         } else if (query->data == "lang_en") {
             write_db.UserLanguageToQueue(query->from->id, "en");
-            bot.getApi().sendMessage(query->message->chat->id, getText("language_selected", "en"), nullptr, 0, botButtons(bot, "en"));
+            bot.getApi().sendMessage(query->message->chat->id, getText("language_selected", "en"), nullptr, 0, botButtons(bot, "en", isAdmin(query->from->id)));
         }
     
         // Ответить на callback обязательно
@@ -159,7 +184,7 @@ int main() {
     });
 
 
-    bot.getEvents().onAnyMessage([&bot, &write_db, &read_db](TgBot::Message::Ptr message) {
+    bot.getEvents().onAnyMessage([&bot, &write_db, &read_db, &sheet](TgBot::Message::Ptr message) {
         printf("User wrote %s\n", message->text.c_str());
 
         if (StringTools::startsWith(message->text, "/start")) {
@@ -190,7 +215,17 @@ int main() {
             bot.getApi().sendMessage(message->chat->id, getText("language_selection", user_language), nullptr, 0, botLanguageMenu()); 
         }
         else if(key == "btn_back") {
-            bot.getApi().sendMessage(message->chat->id, getText("back_message", user_language), nullptr, 0, botButtons(bot, user_language));
+            bot.getApi().sendMessage(message->chat->id, getText("back_message", user_language), nullptr, 0, botButtons(bot, user_language, isAdmin(message->from->id)));
+        }
+        else if(isAdmin(message->from->id)) {
+            if(key == "btn_admin_panel") {
+                bot.getApi().sendMessage(message->chat->id, getText("admin_message", user_language), nullptr, 0, botAdminPanel(bot, user_language)); 
+            }
+            else if(key == "btn_update_database") {
+                sheet.triggerUpdate();
+                bot.getApi().sendMessage(message->chat->id, getText("database_update_message", user_language)); 
+            }
+            
         }
         else {
             bot.getApi().sendMessage(message->chat->id, "❓ Неизвестная команда: " + message->text);
