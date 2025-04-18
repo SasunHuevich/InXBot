@@ -7,6 +7,7 @@
 #include <string> // Для std::stoi
 #include <filesystem>
 #include <sheet_connector.hpp>
+#include <localization.hpp>
 
 
 TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot){
@@ -16,7 +17,7 @@ TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot){
 
     keyboard->keyboard = {{referrals}};
     keyboard->resizeKeyboard = true;  // Уменьшаем клавиатуру, чтобы она не занимала весь экран
-    keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
+    //keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
     return keyboard;
 }
 
@@ -46,7 +47,7 @@ int main() {
 
     
     bot.getEvents().onCommand("start", [&bot,  &write_db, &read_db](TgBot::Message::Ptr message) {
-        bot.getApi().sendMessage(message->chat->id, "Привет!", nullptr, 0, botButtons(bot));
+        bot.getApi().sendMessage(message->chat->id, getText("start_message", "ru"), nullptr, 0, botButtons(bot));
         int64_t user_id = message->from->id;
         bot.getApi().sendMessage(message->chat->id, "Ваша ссылка: https://t.me/" + bot.getApi().getMe()->username + "?start=" + std::to_string(user_id));
         std::string name = message->from->firstName + " " + message->from->lastName;
