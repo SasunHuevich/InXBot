@@ -101,13 +101,7 @@ int main() {
                 
                 if(!param.empty() && std::all_of(param.begin(), param.end(), ::isdigit)){
                     int64_t referrer_id = std::stoll(param);
-
-                    if(read_db.doesUserExist(referrer_id)) {
-                        write_db.newUser(user_id, name, username, referrer_id);
-                    }
-                    else{
-                        write_db.newUser(user_id, name, username);
-                    }
+                    write_db.newUser(user_id, name, username, referrer_id);
                 }
                 else{
                     write_db.newUser(user_id, name, username);

@@ -130,7 +130,7 @@ public:
         query.bind(1, user_id);
         query.bind(2, name);
         query.bind(3, username);
-        if(referrer_id.has_value()) {
+        if(referrer_id.has_value() && doesUserExist(referrer_id.value())) {
             query.bind(4, referrer_id.value());
         }
         else{
