@@ -22,6 +22,11 @@ static std::unordered_map<std::string, std::map<std::string, std::string>> trans
         {"ru", "🌐 Пожалуйста, выберите язык:"}
     }},
 
+    {"language_selected", {
+        {"en", "🇬🇧 You have selected English."},
+        {"ru", "🇷🇺 Вы выбрали Русский язык."}
+    }},
+
     {"btn_briefing", {
         {"en", "📋 Briefing"},
         {"ru", "📋 Инструктаж"}
@@ -47,9 +52,29 @@ static std::unordered_map<std::string, std::map<std::string, std::string>> trans
         {"ru", "🤝 Пригласить друга"}
     }},
 
-    {"btn_invite_friend", {
-        {"en", "🤝 Invite a Friend"},
-        {"ru", "🤝 Пригласить друга"}
+    {"btn_balance", {
+        {"en", "💰 Balance"},
+        {"ru", "💰 Баланс"}
+    }},
+
+    {"btn_change_language", {
+        {"en", "🌐 Change Language"},
+        {"ru", "🌐 Изменить язык"}
+    }},
+
+    {"btn_referrals", {
+        {"en", "🤝 My Referrals"},
+        {"ru", "🤝 Мои реферралы"}
+    }},
+
+    {"btn_change_data", {
+        {"en", "✏️ Edit Profile"},
+        {"ru", "✏️ Изменить данные"}
+    }},
+
+    {"btn_back", {
+        {"en", "🔙 Back"},
+        {"ru", "🔙 Назад"}
     }},
 
     {"description_of_algoritms", {
@@ -119,12 +144,24 @@ static std::unordered_map<std::string, std::map<std::string, std::string>> trans
                "2️⃣ Algorithm Details — full information about each trading strategy.\n\n"
                "3️⃣ InX Project Guide — step-by-step instructions for exchange registration and API key connection.\n\n"
                "4️⃣ Invite a Friend — earn 30% of your friend's profit."},
-               
+
         {"ru", "📋 Главное меню:\n\n"
                "1️⃣ Посмотреть баланс — узнать доходность, подключённые алгоритмы и текущий депозит.\n\n"
                "2️⃣ Описание алгоритмов — подробности по каждому торговому решению.\n\n"
                "3️⃣ Гид по проекту InX — пошаговая инструкция регистрации на бирже и подключения API-ключей.\n\n"
                "4️⃣ Пригласить друга — получи 30% от прибыли друга."}
+        }
+    },
+
+    {"profile", {
+        {"en", "👤 This is your profile! What would you like to do?"},
+        {"ru", "👤 Это ваш профиль! Что хотите сделать?"}
+        }
+    },
+
+    {"back_message", {
+        {"en", "🏠 You’re back to the main menu"},
+        {"ru", "🏠 Вы вернулись в главное меню"}
         }
     }
 

@@ -10,7 +10,7 @@
 #include <localization.hpp>
 
 
-TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot, const std::string& language, int64_t user_id){
+TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot, const std::string& language){
     TgBot::ReplyKeyboardMarkup::Ptr keyboard(new TgBot::ReplyKeyboardMarkup());
 
     TgBot::KeyboardButton::Ptr btnBriefing(new TgBot::KeyboardButton());
@@ -33,6 +33,38 @@ TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot, const std::string& l
         {btnBriefing, btnProfile},
         {btnDescription, btnInvite},
         {btnInstructions}
+    };
+
+    keyboard->resizeKeyboard = true;  // Уменьшаем клавиатуру, чтобы она не занимала весь экран
+    keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
+
+    return keyboard;
+}
+
+
+TgBot::ReplyKeyboardMarkup::Ptr botProfileButtons(TgBot::Bot &bot, const std::string& language){
+    TgBot::ReplyKeyboardMarkup::Ptr keyboard(new TgBot::ReplyKeyboardMarkup());
+
+    TgBot::KeyboardButton::Ptr btnBalance(new TgBot::KeyboardButton());
+    btnBalance->text = getText("btn_balance", language);
+
+    TgBot::KeyboardButton::Ptr btnChangeLanguage(new TgBot::KeyboardButton());
+    btnChangeLanguage->text = getText("btn_change_language", language);
+
+    TgBot::KeyboardButton::Ptr btnReferrals(new TgBot::KeyboardButton());
+    btnReferrals->text = getText("btn_referrals", language);
+
+    TgBot::KeyboardButton::Ptr btnChangeData(new TgBot::KeyboardButton());
+    btnChangeData->text = getText("btn_change_data", language);
+
+    TgBot::KeyboardButton::Ptr btnBack(new TgBot::KeyboardButton());
+    btnBack->text = getText("btn_back", language);
+
+    // Располагаем кнопки в 2 ряда: 3 сверху, 2 снизу
+    keyboard->keyboard = {
+        {btnBalance, btnChangeLanguage},
+        {btnReferrals, btnChangeData},
+        {btnBack}
     };
 
     keyboard->resizeKeyboard = true;  // Уменьшаем клавиатуру, чтобы она не занимала весь экран
@@ -89,7 +121,7 @@ int main() {
         int64_t user_id = message->from->id;
         std::string user_language = read_db.getUserLanguage(user_id);
 
-        bot.getApi().sendMessage(message->chat->id, getText("start_message", user_language), nullptr, 0, botButtons(bot, user_language, user_id));
+        bot.getApi().sendMessage(message->chat->id, getText("start_message", user_language), nullptr, 0, botButtons(bot, user_language));
         bot.getApi().sendMessage(message->chat->id, getText("language_selection", user_language), nullptr, 0, botLanguageMenu()); 
 
         std::string name = message->from->firstName + " " + message->from->lastName;
@@ -116,10 +148,10 @@ int main() {
     bot.getEvents().onCallbackQuery([&bot, &write_db](TgBot::CallbackQuery::Ptr query) {
         if (query->data == "lang_ru") {
             write_db.UserLanguageToQueue(query->from->id, "ru");
-            bot.getApi().sendMessage(query->message->chat->id, "Вы выбрали Русский язык.", nullptr, 0, botButtons(bot, "ru", query->from->id));
+            bot.getApi().sendMessage(query->message->chat->id, getText("language_selected", "ru"), nullptr, 0, botButtons(bot, "ru"));
         } else if (query->data == "lang_en") {
             write_db.UserLanguageToQueue(query->from->id, "en");
-            bot.getApi().sendMessage(query->message->chat->id, "You selected English.", nullptr, 0, botButtons(bot, "en", query->from->id));
+            bot.getApi().sendMessage(query->message->chat->id, getText("language_selected", "en"), nullptr, 0, botButtons(bot, "en"));
         }
     
         // Ответить на callback обязательно
@@ -142,7 +174,7 @@ int main() {
             bot.getApi().sendMessage(message->chat->id, getText("briefing", user_language));
         } 
         else if (key == "btn_profile") {
-            bot.getApi().sendMessage(message->chat->id, "👤 Здесь ваш профиль...");
+            bot.getApi().sendMessage(message->chat->id, getText("profile", user_language), nullptr, 0, botProfileButtons(bot, user_language));
         } 
         else if (key == "btn_description_of_algoritms") {
             bot.getApi().sendMessage(message->chat->id, getText("description_of_algoritms", user_language));
@@ -154,6 +186,12 @@ int main() {
             bot.getApi().sendMessage(message->chat->id, getText("invite_friend", user_language) + 
             "https://t.me/" + bot.getApi().getMe()->username + "?start=" + std::to_string(message->from->id));
         } 
+        else if(key == "btn_change_language") {
+            bot.getApi().sendMessage(message->chat->id, getText("language_selection", user_language), nullptr, 0, botLanguageMenu()); 
+        }
+        else if(key == "btn_back") {
+            bot.getApi().sendMessage(message->chat->id, getText("back_message", user_language), nullptr, 0, botButtons(bot, user_language));
+        }
         else {
             bot.getApi().sendMessage(message->chat->id, "❓ Неизвестная команда: " + message->text);
         }
