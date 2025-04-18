@@ -142,14 +142,31 @@ int main() {
 
     bot.getEvents().onAnyMessage([&bot, &write_db, &read_db](TgBot::Message::Ptr message) {
         printf("User wrote %s\n", message->text.c_str());
+
         if (StringTools::startsWith(message->text, "/start")) {
             return;
         }
-        else if (message->text == "Refferals") {
-            //bot.getApi().sendMessage(message->chat->id, "Количество ваших рефераллов: " + std::to_string(read_db.countReferrals(message->from->id)));
-        }
-        else{
-            bot.getApi().sendMessage(message->chat->id, "Ваше сообщение: " + message->text);
+
+        std::string key = getButtonKeyFromText(read_db.getUserLanguage(message->from->id), message->text);
+
+
+        if (key == "btn_briefing") {
+            bot.getApi().sendMessage(message->chat->id, "📋 Вот ваш инструктаж...");
+        } 
+        else if (key == "btn_profile") {
+            bot.getApi().sendMessage(message->chat->id, "👤 Здесь ваш профиль...");
+        } 
+        else if (key == "btn_description_of_algoritms") {
+            bot.getApi().sendMessage(message->chat->id, "🧠 Подробности об алгоритмах...");
+        } 
+        else if (key == "btn_instructions") {
+            bot.getApi().sendMessage(message->chat->id, "🔌 Инструкция по подключению...");
+        } 
+        else if (key == "btn_invite_friend") {
+            bot.getApi().sendMessage(message->chat->id, "🤝 Пригласите друга по этой ссылке...");
+        } 
+        else {
+            bot.getApi().sendMessage(message->chat->id, "❓ Неизвестная команда: " + message->text);
         }
         
     });

@@ -52,3 +52,14 @@ static std::unordered_map<std::string, std::map<std::string, std::string>> trans
 std::string& getText(const std::string& key, const std::string lang) {
     return translations[key][lang];
 }
+
+
+std::string getButtonKeyFromText(const std::string& lang, const std::string& text) {
+    for (const auto& item : translations) {
+        if (item.second.count(lang) && item.second.at(lang) == text) {
+            return item.first;
+        }
+    }
+
+    return "";
+}
