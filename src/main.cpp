@@ -22,6 +22,24 @@ TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot){
 }
 
 
+TgBot::InlineKeyboardMarkup::Ptr botLanguageMenu() {
+    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup());
+
+    TgBot::InlineKeyboardButton::Ptr ruBtn(new TgBot::InlineKeyboardButton());
+    ruBtn->text = "Русский";
+    ruBtn->callbackData = "lang_ru";
+
+    TgBot::InlineKeyboardButton::Ptr enBtn(new TgBot::InlineKeyboardButton());
+    enBtn->text = "English";
+    enBtn->callbackData = "lang_en";
+
+    keyboard->inlineKeyboard = {{ruBtn, enBtn}};
+
+    return keyboard;
+}
+
+
+
 int main() {
     //TODO: Не должно открываться две версии одновременно
 
@@ -42,14 +60,18 @@ int main() {
     write_db.createTableELITE();
     write_db.createTableSPOT();
     write_db.createTableReferrers();
+    write_db.createTableUsersLanguage();
 
     TgBot::Bot bot(TG_BOT_TOKEN);
 
     
     bot.getEvents().onCommand("start", [&bot,  &write_db, &read_db](TgBot::Message::Ptr message) {
-        bot.getApi().sendMessage(message->chat->id, getText("start_message", "ru"), nullptr, 0, botButtons(bot));
         int64_t user_id = message->from->id;
+
+        bot.getApi().sendMessage(message->chat->id, getText("start_message", read_db.getUserLanguage(user_id)), nullptr, 0, botButtons(bot));
+        bot.getApi().sendMessage(message->chat->id, getText("language_selection", read_db.getUserLanguage(user_id)), nullptr, 0, botLanguageMenu()); 
         bot.getApi().sendMessage(message->chat->id, "Ваша ссылка: https://t.me/" + bot.getApi().getMe()->username + "?start=" + std::to_string(user_id));
+
         std::string name = message->from->firstName + " " + message->from->lastName;
         std::string username = message->from->username;
         if(!read_db.doesUserExist(user_id)) {
@@ -80,6 +102,20 @@ int main() {
             bot.getApi().sendMessage(message->chat->id, "Вы уже зарегистрированы!");
         }
         
+    });
+
+
+    bot.getEvents().onCallbackQuery([&bot, &write_db](TgBot::CallbackQuery::Ptr query) {
+        if (query->data == "lang_ru") {
+            write_db.UserLanguageToQueue(query->from->id, "ru");
+            bot.getApi().sendMessage(query->message->chat->id, "Вы выбрали Русский язык.");
+        } else if (query->data == "lang_en") {
+            write_db.UserLanguageToQueue(query->from->id, "en");
+            bot.getApi().sendMessage(query->message->chat->id, "You selected English.");
+        }
+    
+        // Ответить на callback обязательно
+        bot.getApi().answerCallbackQuery(query->id);
     });
 
 

@@ -109,6 +109,18 @@ public:
         db.exec(query);
         std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
     }
+
+
+    void createTableUsersLanguage() {
+        std::string tableName = "users_language";
+        std::string query = "CREATE TABLE IF NOT EXISTS " + tableName + " ("
+                             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                             "user_id INTEGER NOT NULL UNIQUE,"
+                             "language TEXT DEFAULT 'ru');";
+        db.exec(query);
+        std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
+    }
+
     
 
     void insertUser(int64_t user_id, const std::string& name, const std::string& username, std::optional<int64_t> referrer_id = std::nullopt) {
@@ -165,6 +177,49 @@ public:
         query.bind(1, user_id);
         query.exec();
     }
+
+
+    void insertIntoUsersLanguage(int64_t user_id) {
+        std::string queryStr = "INSERT INTO users_language (user_id) VALUES (?)";
+        SQLite::Statement query(db, queryStr);
+
+        query.bind(1, user_id);
+        query.exec();
+    }
+
+
+    std::string getUserLanguage(int64_t user_id) {
+        SQLite::Statement query(db, "SELECT * FROM users_language WHERE user_id = ?");
+        query.bind(1, user_id);
+
+        if (query.executeStep()) {
+            return query.getColumn(2).getText();
+        }
+
+        return "ru";
+    }
+
+
+    void setUserLanguage(int64_t user_id, const std::string& language) {
+        SQLite::Statement users_language(db, "UPDATE users_language SET language = ? WHERE user_id = ?");
+
+        users_language.bind(1, language);
+        users_language.bind(2, user_id);
+
+        users_language.exec();
+    }
+
+
+    void UserLanguageToQueue(int64_t user_id, std::string language) {
+        queueMutex.lock();
+
+        operations.push_back([this, user_id, language]() {
+            setUserLanguage(user_id, language);
+        });
+
+        queueMutex.unlock();
+    }
+
 
     void updateReferrersLevels(int64_t user_id, int level = 1) {
         if (level < 1 || level > 5) {
@@ -429,6 +484,10 @@ public:
 
         operations.push_back([this, user_id]() {
             insertIntoElite(user_id);
+        });
+
+        operations.push_back([this, user_id]() {
+            insertIntoUsersLanguage(user_id);
         });
 
         operations.push_back([this, user_id]() {
