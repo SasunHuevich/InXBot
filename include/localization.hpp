@@ -22,15 +22,33 @@ static std::unordered_map<std::string, std::map<std::string, std::string>> trans
         {"ru", "🌐 Пожалуйста, выберите язык:"}
     }},
 
-    {"btn_language", {
-        {"en", "Language"},
-        {"ru", "Язык"}
+    {"btn_briefing", {
+        {"en", "📋 Briefing"},
+        {"ru", "📋 Инструктаж"}
+    }},
+    
+    {"btn_profile", {
+        {"en", "👤 Profile"},
+        {"ru", "👤 Профиль"}
+    }},
+    
+    {"btn_description_of_algoritms", {
+        {"en", "🧠 Algorithm Overview"},
+        {"ru", "🧠 Описание алгоритмов"}
+    }},
+    
+    {"btn_instructions", {
+        {"en", "🔌 Connection Guide"},
+        {"ru", "🔌 Инструкции по подключению"}
+    }},
+    
+    {"btn_invite_friend", {
+        {"en", "🤝 Invite a Friend"},
+        {"ru", "🤝 Пригласить друга"}
     }}
 };
 
 
-std::string getText(const std::string& key, const std::string lang) {
-    
-
+std::string& getText(const std::string& key, const std::string lang) {
     return translations[key][lang];
 }
