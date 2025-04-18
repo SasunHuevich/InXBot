@@ -91,7 +91,6 @@ int main() {
 
         bot.getApi().sendMessage(message->chat->id, getText("start_message", user_language), nullptr, 0, botButtons(bot, user_language, user_id));
         bot.getApi().sendMessage(message->chat->id, getText("language_selection", user_language), nullptr, 0, botLanguageMenu()); 
-        //bot.getApi().sendMessage(message->chat->id, "Ваша ссылка: https://t.me/" + bot.getApi().getMe()->username + "?start=" + std::to_string(user_id));
 
         std::string name = message->from->firstName + " " + message->from->lastName;
         std::string username = message->from->username;
@@ -135,23 +134,25 @@ int main() {
             return;
         }
 
-        std::string key = getButtonKeyFromText(read_db.getUserLanguage(message->from->id), message->text);
+        std::string user_language = read_db.getUserLanguage(message->from->id);
+        std::string key = getButtonKeyFromText(user_language, message->text);
 
 
         if (key == "btn_briefing") {
-            bot.getApi().sendMessage(message->chat->id, "📋 Вот ваш инструктаж...");
+            bot.getApi().sendMessage(message->chat->id, getText("briefing", user_language));
         } 
         else if (key == "btn_profile") {
             bot.getApi().sendMessage(message->chat->id, "👤 Здесь ваш профиль...");
         } 
         else if (key == "btn_description_of_algoritms") {
-            bot.getApi().sendMessage(message->chat->id, "🧠 Подробности об алгоритмах...");
+            bot.getApi().sendMessage(message->chat->id, getText("description_of_algoritms", user_language));
         } 
         else if (key == "btn_instructions") {
-            bot.getApi().sendMessage(message->chat->id, "🔌 Инструкция по подключению...");
+            bot.getApi().sendMessage(message->chat->id, getText("instructions", user_language));
         } 
         else if (key == "btn_invite_friend") {
-            bot.getApi().sendMessage(message->chat->id, "🤝 Пригласите друга по этой ссылке...");
+            bot.getApi().sendMessage(message->chat->id, getText("invite_friend", user_language) + 
+            "https://t.me/" + bot.getApi().getMe()->username + "?start=" + std::to_string(message->from->id));
         } 
         else {
             bot.getApi().sendMessage(message->chat->id, "❓ Неизвестная команда: " + message->text);
