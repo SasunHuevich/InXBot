@@ -91,7 +91,7 @@ int main() {
 
         bot.getApi().sendMessage(message->chat->id, getText("start_message", user_language), nullptr, 0, botButtons(bot, user_language, user_id));
         bot.getApi().sendMessage(message->chat->id, getText("language_selection", user_language), nullptr, 0, botLanguageMenu()); 
-        bot.getApi().sendMessage(message->chat->id, "Ваша ссылка: https://t.me/" + bot.getApi().getMe()->username + "?start=" + std::to_string(user_id));
+        //bot.getApi().sendMessage(message->chat->id, "Ваша ссылка: https://t.me/" + bot.getApi().getMe()->username + "?start=" + std::to_string(user_id));
 
         std::string name = message->from->firstName + " " + message->from->lastName;
         std::string username = message->from->username;
@@ -104,25 +104,19 @@ int main() {
 
                     if(read_db.doesUserExist(referrer_id)) {
                         write_db.newUser(user_id, name, username, referrer_id);
-                        bot.getApi().sendMessage(message->chat->id, "Ваш реферал: " + read_db.getUsernameById(referrer_id));
                     }
                     else{
                         write_db.newUser(user_id, name, username);
                     }
-                    
                 }
                 else{
-                    bot.getApi().sendMessage(message->chat->id, "Реферальная ссылка неверна!");
+                    write_db.newUser(user_id, name, username);
                 }
             }
             else{
                 write_db.newUser(user_id, name, username);
             }
         }
-        else{
-            bot.getApi().sendMessage(message->chat->id, "Вы уже зарегистрированы!");
-        }
-        
     });
 
 
