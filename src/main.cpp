@@ -45,7 +45,7 @@ TgBot::ReplyKeyboardMarkup::Ptr botButtons(TgBot::Bot &bot, const std::string& l
     keyboard->keyboard.push_back({btnInstructions});
 
     keyboard->resizeKeyboard = true;  // Уменьшаем клавиатуру, чтобы она не занимала весь экран
-    keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
+    //keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
 
     return keyboard;
 }
@@ -76,7 +76,7 @@ TgBot::ReplyKeyboardMarkup::Ptr botProfileButtons(TgBot::Bot &bot, const std::st
     };
 
     keyboard->resizeKeyboard = true;  // Уменьшаем клавиатуру, чтобы она не занимала весь экран
-    keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
+    //keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
 
     return keyboard;
 }
@@ -112,7 +112,7 @@ TgBot::ReplyKeyboardMarkup::Ptr botAdminPanel(TgBot::Bot &bot, const std::string
     keyboard->keyboard.push_back({btnBack});
 
     keyboard->resizeKeyboard = true;  // Уменьшаем клавиатуру, чтобы она не занимала весь экран
-    keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
+    //keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
 
     return keyboard;
 }
@@ -134,7 +134,7 @@ TgBot::ReplyKeyboardMarkup::Ptr botChangeDataPanel(TgBot::Bot &bot, const std::s
     };
 
     keyboard->resizeKeyboard = true;  // Уменьшаем клавиатуру, чтобы она не занимала весь экран
-    keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
+    //keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
 
     return keyboard;
 }
@@ -159,6 +159,7 @@ int main() {
     write_db.createTableSPOT();
     write_db.createTableReferrers();
     write_db.createTableUsersLanguage();
+    write_db.createTableLastUpdate();
 
     TgBot::Bot bot(TG_BOT_TOKEN);
 

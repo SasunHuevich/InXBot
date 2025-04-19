@@ -512,6 +512,7 @@ public:
 
             if(shouldUpdate) {
                 updateDbWithSheets(db);
+                db.setLastUpdateDate();
                 shouldUpdate = false;
             }
 

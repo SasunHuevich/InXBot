@@ -27,11 +27,6 @@ static std::unordered_map<std::string, std::map<std::string, std::string>> trans
         {"ru", "🇷🇺 Вы выбрали Русский язык."}
     }},
 
-    {"btn_share_contact", {
-        {"en", "📱 Share Contact"},
-        {"ru", "📱 Поделиться контактом"}
-    }},
-
     {"share_contact_message", {
         {"en", "📱 Please share your contact:"},
         {"ru", "📱 Пожалуйста, поделитесь контактом:"}
@@ -55,71 +50,6 @@ static std::unordered_map<std::string, std::map<std::string, std::string>> trans
     {"database_update_message", {
         {"en", "⏳ The database will be updated within 15 minutes."},
         {"ru", "⏳ База данных будет обновлена в течение 15 минут."}
-    }},
-
-    {"btn_admin_panel", {
-        {"en", "👑 Admin Panel"},
-        {"ru", "👑 Панель администратора"}
-    }},
-
-    {"btn_update_database", {
-        {"en", "📄 Update Database"},
-        {"ru", "📄 Обновить базу данных"}
-    }},
-
-    {"btn_briefing", {
-        {"en", "📋 Briefing"},
-        {"ru", "📋 Инструктаж"}
-    }},
-    
-    {"btn_profile", {
-        {"en", "👤 Profile"},
-        {"ru", "👤 Профиль"}
-    }},
-    
-    {"btn_description_of_algoritms", {
-        {"en", "🧠 Algorithm Overview"},
-        {"ru", "🧠 Описание алгоритмов"}
-    }},
-    
-    {"btn_instructions", {
-        {"en", "🔌 Connection Guide"},
-        {"ru", "🔌 Инструкции по подключению"}
-    }},
-    
-    {"btn_invite_friend", {
-        {"en", "🤝 Invite a Friend"},
-        {"ru", "🤝 Пригласить друга"}
-    }},
-
-    {"btn_balance", {
-        {"en", "💰 Balance"},
-        {"ru", "💰 Баланс"}
-    }},
-
-    {"btn_change_language", {
-        {"en", "🌐 Change Language"},
-        {"ru", "🌐 Изменить язык"}
-    }},
-
-    {"btn_referrals", {
-        {"en", "🤝 My Referrals"},
-        {"ru", "🤝 Мои реферралы"}
-    }},
-
-    {"btn_change_data", {
-        {"en", "✏️ Edit Profile"},
-        {"ru", "✏️ Изменить данные"}
-    }},
-
-    {"btn_back", {
-        {"en", "🔙 Back to Main Menu"},
-        {"ru", "🔙 Назад в главное меню"}
-    }},
-    
-    {"btn_back_change_data", {
-        {"en", "🔙 Back to Profile"},
-        {"ru", "🔙 Назад в профиль"}
     }},
 
     {"description_of_algoritms", {
@@ -213,13 +143,90 @@ static std::unordered_map<std::string, std::map<std::string, std::string>> trans
 };
 
 
+static std::unordered_map<std::string, std::map<std::string, std::string>> btn_translations {
+    {"btn_admin_panel", {
+        {"en", "👑 Admin Panel"},
+        {"ru", "👑 Панель администратора"}
+    }},
+
+    {"btn_update_database", {
+        {"en", "📄 Update Database"},
+        {"ru", "📄 Обновить базу данных"}
+    }},
+
+    {"btn_briefing", {
+        {"en", "📋 Briefing"},
+        {"ru", "📋 Инструктаж"}
+    }},
+    
+    {"btn_profile", {
+        {"en", "👤 Profile"},
+        {"ru", "👤 Профиль"}
+    }},
+    
+    {"btn_description_of_algoritms", {
+        {"en", "🧠 Algorithm Overview"},
+        {"ru", "🧠 Описание алгоритмов"}
+    }},
+    
+    {"btn_instructions", {
+        {"en", "🔌 Connection Guide"},
+        {"ru", "🔌 Инструкции по подключению"}
+    }},
+    
+    {"btn_invite_friend", {
+        {"en", "🤝 Invite a Friend"},
+        {"ru", "🤝 Пригласить друга"}
+    }},
+
+    {"btn_balance", {
+        {"en", "💰 Balance"},
+        {"ru", "💰 Баланс"}
+    }},
+
+    {"btn_change_language", {
+        {"en", "🌐 Change Language"},
+        {"ru", "🌐 Изменить язык"}
+    }},
+
+    {"btn_referrals", {
+        {"en", "🤝 My Referrals"},
+        {"ru", "🤝 Мои реферралы"}
+    }},
+
+    {"btn_change_data", {
+        {"en", "✏️ Edit Profile"},
+        {"ru", "✏️ Изменить данные"}
+    }},
+
+    {"btn_back", {
+        {"en", "🔙 Back to Main Menu"},
+        {"ru", "🔙 Назад в главное меню"}
+    }},
+    
+    {"btn_back_change_data", {
+        {"en", "🔙 Back to Profile"},
+        {"ru", "🔙 Назад в профиль"}
+    }},
+
+    {"btn_share_contact", {
+        {"en", "📱 Share Contact"},
+        {"ru", "📱 Поделиться контактом"}
+    }},
+
+};
+
+
 std::string& getText(const std::string& key, const std::string lang) {
+    if(btn_translations.find(key) != btn_translations.end()) {
+        return btn_translations[key][lang];
+    }
     return translations[key][lang];
 }
 
 
 std::string getButtonKeyFromText(const std::string& lang, const std::string& text) {
-    for (const auto& item : translations) {
+    for (const auto& item : btn_translations) {
         if (item.second.count(lang) && item.second.at(lang) == text) {
             return item.first;
         }

@@ -121,6 +121,23 @@ public:
         std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
     }
 
+
+    void createTableLastUpdate() {
+        std::string tableName = "last_update";
+        std::string query = "CREATE TABLE IF NOT EXISTS " + tableName + " ("
+                             "id INTEGER PRIMARY KEY CHECK (id = 1),"
+                             "last_update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
+        db.exec(query);
+        std::cout << "Таблица '" << tableName << "' создана или существует." << std::endl;
+    }
+
+
+    void setLastUpdateDate() {
+        std::string queryStr = "INSERT OR REPLACE INTO last_update (id, last_update_time) VALUES (1, datetime('now'))";
+        SQLite::Statement query(db, queryStr);
+
+        query.exec();
+    }
     
 
     void insertUser(int64_t user_id, const std::string& name, const std::string& username, std::optional<int64_t> referrer_id = std::nullopt) {
@@ -359,7 +376,6 @@ public:
         sep = ' ';
         std::getline(ss, day, sep);
         
-        std::cout << day + "." + month + "." + year.substr(2) << std::endl;
         return day + "." + month + "." + year.substr(2);
     }
 
