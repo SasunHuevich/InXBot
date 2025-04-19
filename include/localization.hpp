@@ -27,6 +27,26 @@ static std::unordered_map<std::string, std::map<std::string, std::string>> trans
         {"ru", "🇷🇺 Вы выбрали Русский язык."}
     }},
 
+    {"btn_share_contact", {
+        {"en", "📱 Share Contact"},
+        {"ru", "📱 Поделиться контактом"}
+    }},
+
+    {"share_contact_message", {
+        {"en", "📱 Please share your contact:"},
+        {"ru", "📱 Пожалуйста, поделитесь контактом:"}
+    }},
+
+    {"contact_saved_message", {
+        {"en", "✅ Thank you! We've received your contact."},
+        {"ru", "✅ Спасибо! Мы получили ваш контакт."}
+    }},
+
+    {"edit_profile_message", {
+        {"en", "✏️ What would you like to change?"},
+        {"ru", "✏️ Что вы хотите изменить?"}
+    }},
+
     {"admin_message", {
         {"en", "👑 Greetings, Supreme One. How may I serve you today?"},
         {"ru", "👑 Здравствуйте, Наивысший. Чем могу быть полезен?"}

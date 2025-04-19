@@ -641,6 +641,27 @@ public:
             std::cerr << "[executeBatchInsert][Unexpected Error] " << e.what() << std::endl;
         }
     }
+
+
+    void insertPhone(int64_t user_id, const std::string& phone) {
+        SQLite::Statement spot(db, "UPDATE users SET phone = ? WHERE user_id = ?");
+
+        spot.bind(1, phone);
+        spot.bind(2, user_id);
+
+        spot.exec();
+    }
+
+
+    void setPhone(int64_t user_id, std::string phone) {
+        queueMutex.lock();
+
+        operations.push_back([this, user_id, phone]() {
+            insertPhone(user_id, phone);
+        });
+
+        queueMutex.unlock();
+    }
 };
 
 #endif

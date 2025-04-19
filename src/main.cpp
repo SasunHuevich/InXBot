@@ -69,7 +69,6 @@ TgBot::ReplyKeyboardMarkup::Ptr botProfileButtons(TgBot::Bot &bot, const std::st
     TgBot::KeyboardButton::Ptr btnBack(new TgBot::KeyboardButton());
     btnBack->text = getText("btn_back", language);
 
-    // Располагаем кнопки в 2 ряда: 3 сверху, 2 снизу
     keyboard->keyboard = {
         {btnBalance, btnChangeLanguage},
         {btnReferrals, btnChangeData},
@@ -87,11 +86,11 @@ TgBot::InlineKeyboardMarkup::Ptr botLanguageMenu() {
     TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup());
 
     TgBot::InlineKeyboardButton::Ptr ruBtn(new TgBot::InlineKeyboardButton());
-    ruBtn->text = "Русский";
+    ruBtn->text = "🇷🇺 Русский";
     ruBtn->callbackData = "lang_ru";
 
     TgBot::InlineKeyboardButton::Ptr enBtn(new TgBot::InlineKeyboardButton());
-    enBtn->text = "English";
+    enBtn->text = "🇬🇧 English";
     enBtn->callbackData = "lang_en";
 
     keyboard->inlineKeyboard = {{ruBtn, enBtn}};
@@ -111,6 +110,28 @@ TgBot::ReplyKeyboardMarkup::Ptr botAdminPanel(TgBot::Bot &bot, const std::string
 
     keyboard->keyboard.push_back({btnUpdateGoogleTable});
     keyboard->keyboard.push_back({btnBack});
+
+    keyboard->resizeKeyboard = true;  // Уменьшаем клавиатуру, чтобы она не занимала весь экран
+    keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
+
+    return keyboard;
+}
+
+
+TgBot::ReplyKeyboardMarkup::Ptr botChangeDataPanel(TgBot::Bot &bot, const std::string& language){
+    TgBot::ReplyKeyboardMarkup::Ptr keyboard(new TgBot::ReplyKeyboardMarkup());
+
+    TgBot::KeyboardButton::Ptr btnContact(new TgBot::KeyboardButton());
+    btnContact->text = getText("btn_share_contact", language);
+    btnContact->requestContact = true;
+
+    TgBot::KeyboardButton::Ptr btnBack(new TgBot::KeyboardButton());
+    btnBack->text = getText("btn_back", language);
+
+    keyboard->keyboard = {
+        {btnContact},
+        {btnBack}
+    };
 
     keyboard->resizeKeyboard = true;  // Уменьшаем клавиатуру, чтобы она не занимала весь экран
     keyboard->oneTimeKeyboard = true; // Убираем клавиатуру после выбора
@@ -187,15 +208,17 @@ int main() {
     bot.getEvents().onAnyMessage([&bot, &write_db, &read_db, &sheet](TgBot::Message::Ptr message) {
         printf("User wrote %s\n", message->text.c_str());
 
-        if (StringTools::startsWith(message->text, "/start")) {
-            return;
-        }
-
         std::string user_language = read_db.getUserLanguage(message->from->id);
         std::string key = getButtonKeyFromText(user_language, message->text);
 
-
-        if (key == "btn_briefing") {
+        if (StringTools::startsWith(message->text, "/start")) {
+            return;
+        }
+        else if(message->contact != nullptr) {
+            write_db.setPhone(message->contact->userId, message->contact->phoneNumber);
+            bot.getApi().sendMessage(message->chat->id, getText("contact_saved_message", user_language));
+        }
+        else if (key == "btn_briefing") {
             bot.getApi().sendMessage(message->chat->id, getText("briefing", user_language));
         } 
         else if (key == "btn_profile") {
@@ -216,6 +239,9 @@ int main() {
         }
         else if(key == "btn_back") {
             bot.getApi().sendMessage(message->chat->id, getText("back_message", user_language), nullptr, 0, botButtons(bot, user_language, isAdmin(message->from->id)));
+        }
+        else if(key == "btn_change_data") {
+            bot.getApi().sendMessage(message->chat->id, getText("edit_profile_message", user_language), nullptr, 0, botChangeDataPanel(bot, user_language));
         }
         else if(isAdmin(message->from->id)) {
             if(key == "btn_admin_panel") {
