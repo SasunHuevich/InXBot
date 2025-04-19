@@ -126,7 +126,7 @@ TgBot::ReplyKeyboardMarkup::Ptr botChangeDataPanel(TgBot::Bot &bot, const std::s
     btnContact->requestContact = true;
 
     TgBot::KeyboardButton::Ptr btnBack(new TgBot::KeyboardButton());
-    btnBack->text = getText("btn_back", language);
+    btnBack->text = getText("btn_back_change_data", language);
 
     keyboard->keyboard = {
         {btnContact},
@@ -238,7 +238,10 @@ int main() {
             bot.getApi().sendMessage(message->chat->id, getText("language_selection", user_language), nullptr, 0, botLanguageMenu()); 
         }
         else if(key == "btn_back") {
-            bot.getApi().sendMessage(message->chat->id, getText("back_message", user_language), nullptr, 0, botButtons(bot, user_language, isAdmin(message->from->id)));
+            bot.getApi().sendMessage(message->chat->id, getText("main_menu_message", user_language), nullptr, 0, botButtons(bot, user_language, isAdmin(message->from->id)));
+        }
+        else if(key == "btn_back_change_data") {
+            bot.getApi().sendMessage(message->chat->id, getText("edit_profile_message", user_language), nullptr, 0, botProfileButtons(bot, user_language));
         }
         else if(key == "btn_change_data") {
             bot.getApi().sendMessage(message->chat->id, getText("edit_profile_message", user_language), nullptr, 0, botChangeDataPanel(bot, user_language));

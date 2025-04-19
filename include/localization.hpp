@@ -113,8 +113,13 @@ static std::unordered_map<std::string, std::map<std::string, std::string>> trans
     }},
 
     {"btn_back", {
-        {"en", "🔙 Back"},
-        {"ru", "🔙 Назад"}
+        {"en", "🔙 Back to Main Menu"},
+        {"ru", "🔙 Назад в главное меню"}
+    }},
+    
+    {"btn_back_change_data", {
+        {"en", "🔙 Back to Profile"},
+        {"ru", "🔙 Назад в профиль"}
     }},
 
     {"description_of_algoritms", {
@@ -199,7 +204,7 @@ static std::unordered_map<std::string, std::map<std::string, std::string>> trans
         }
     },
 
-    {"back_message", {
+    {"main_menu_message", {
         {"en", "🏠 You’re back to the main menu"},
         {"ru", "🏠 Вы вернулись в главное меню"}
         }
