@@ -1,65 +1,98 @@
 # InXBot
 
+Telegram-бот на C++ для клиентов InX — сервиса автоматической торговли криптовалютой.
+Бот ведёт базу пользователей с реферальной системой и синхронизирует её с Google Таблицей,
+в которой администраторы ведут данные по клиентам (балансы, подключённые стратегии, прибыль, комиссии).
 
-## Пример файла   include/config.hpp
-```Shell
+## Возможности
+
+- **Главное меню**: брифинг, описание торговых алгоритмов, инструкция, приглашение друга.
+- **Профиль**: баланс, рефералы, смена языка, передача номера телефона (через кнопку «Поделиться контактом»).
+- **Реферальная система**: персональная ссылка `https://t.me/<bot>?start=<user_id>`, учёт рефереров по уровням.
+- **Локализация**: русский и английский, тексты лежат в [include/localization.hpp](include/localization.hpp).
+- **Админ-панель**: доступна пользователям из списка `adminIds`, позволяет вручную запустить синхронизацию с таблицей.
+- **Синхронизация с Google Sheets** (лист `clients`):
+  - новые пользователи бота дописываются в таблицу;
+  - данные из таблицы (баланс, комиссия, статусы стратегий EASY / ELITE / SPOT) периодически подтягиваются в локальную БД.
+
+## Как устроено
+
+| Файл | Что делает |
+|---|---|
+| [src/main.cpp](src/main.cpp) | Точка входа: клавиатуры, обработчики команд и сообщений, long polling |
+| [include/database_connector.hpp](include/database_connector.hpp) | SQLite (`db/users.db`): таблицы пользователей, стратегий, рефералов, языков; очередь записи в отдельном потоке |
+| [include/sheet_connector.hpp](include/sheet_connector.hpp) | Google Sheets API: авторизация сервисного аккаунта через JWT, чтение и запись листа `clients` |
+| [include/localization.hpp](include/localization.hpp) | Тексты сообщений и кнопок на RU/EN |
+
+Стек: C++20, [tgbot-cpp](https://github.com/reo7sp/tgbot-cpp), SQLiteCpp, libcurl, jwt-cpp, RapidJSON, nlohmann/json, OpenSSL.
+Зависимости (кроме tgbot-cpp) ставятся через [Conan](https://conan.io/).
+
+## Настройка
+
+### 1. Telegram-бот
+
+Создайте бота у [@BotFather](https://t.me/BotFather) и получите токен.
+
+### 2. Google Таблица
+
+1. В Google Cloud Console создайте проект, включите **Google Sheets API** и создайте **сервисный аккаунт**.
+2. Скачайте JSON-ключ сервисного аккаунта и положите его в корень проекта как `service_account.json`.
+3. Создайте таблицу с листом `clients` и выдайте email сервисного аккаунта права редактора.
+4. ID таблицы — это часть URL: `https://docs.google.com/spreadsheets/d/<SPREADSHEET_ID>/edit`.
+
+### 3. Файл `include/config.hpp`
+
+Файл в `.gitignore`, создайте его вручную:
+
+```cpp
+#pragma once
+
 #include <string>
+#include <vector>
+#include <cstdint>
 
-std::string TG_BOT_TOKEN ="6653096426:AAFS69aAx7gG8JPew5HtjSIPdqUSsQB6bi4";
-std::string DB_NAME = "";
+std::string TG_BOT_TOKEN = "<токен от BotFather>";
 std::string SERVICE_ACCOUNT_FILE = "service_account.json";
-std::string SPREADSHEET_ID = "1Qvxke0APj_u7fGcCqJTRnpkLoUfaT4F4gaaRfmEp1fw"
+std::string SPREADSHEET_ID = "<ID Google Таблицы>";
+
+// Telegram user_id администраторов
+std::vector<int64_t> adminIds = {123456789};
 ```
 
-```Shell
-sudo apt update
-```
+> Никогда не коммитьте `config.hpp` и `service_account.json` — оба уже добавлены в `.gitignore`.
 
-```Shell
-sudo apt install cmake
-```
+## Сборка (Ubuntu/Debian)
 
-```Shell
-sudo apt install libcurl4-openssl-dev
-```
-
-```Shell
-apt update && apt upgrade -y && apt install -y pipx clang cmake ccache libc++-18-dev libc++1-18 gdb && export PATH=/usr/lib/ccache:${PATH} && echo "export PATH=/usr/lib/ccache:\${PATH}" >> ~/.bashrc 
-```
-
-```Shell
-sudo apt-get install zlib1g-dev
-```
-
-```Shell
-sudo apt-get install libssl-dev
-```
-
-```Shell
-sudo apt-get install libboost-all-dev
-```
-Установка tg-bot-cpp
-```Shell
-git clone https://github.com/reo7sp/tgbot-cpp.git
-cd tgbot-cpp
-cmake .
-make -j4
-sudo make install
-```
-
-Установка SQLiteCpp
-
-```Shell
-git clone https://github.com/SRombauts/SQLiteCpp.git
-cd SQLiteCpp
-mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j4
-sudo make install
-```
-
-Установка CURL
+Системные зависимости:
 
 ```shell
-sudo apt install -y libcurl4-openssl-dev
+sudo apt update
+sudo apt install -y build-essential cmake pipx \
+    libboost-all-dev libssl-dev zlib1g-dev libcurl4-openssl-dev
+pipx install conan
+conan profile detect
 ```
+
+tgbot-cpp подключается как подпроект из `libs/`:
+
+```shell
+git clone https://github.com/reo7sp/tgbot-cpp.git libs/tgbot-cpp
+```
+
+Остальные зависимости через Conan и сборка:
+
+```shell
+conan install . --output-folder=build --build=missing
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+```
+
+## Запуск
+
+Запускайте из корня проекта, чтобы бот нашёл `service_account.json` и создал папку `db/`:
+
+```shell
+./build/src/inx_bot
+```
+
+База данных создаётся автоматически в `db/users.db`.
